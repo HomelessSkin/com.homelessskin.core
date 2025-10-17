@@ -1,0 +1,20 @@
+{
+  "name": "com.homelessskin.core",
+  "displayName": "Core",
+  "version": "0.0.0",
+  "description": "core",
+  "author": {
+    "name": "RU_1n",
+    "email": "your@email.com"
+  },
+  "keywords": [
+    "core",
+    "utilities",
+    "systems"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/homelessskin/shared-core.git"
+  },
+  "hideInEditor": false
+}
