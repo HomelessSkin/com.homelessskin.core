@@ -12,7 +12,6 @@ namespace Core.GamePlay
     {
         protected GameEvent.Type State;
         protected GameEvent.Type PrevState;
-        protected GameEvent.Type NextState;
 
         protected UIManagerBase UIManagerBase;
         protected CameraEngineBase CameraEngineBase;
@@ -23,6 +22,8 @@ namespace Core.GamePlay
         }
         protected override void OnUpdate()
         {
+            this.Dependency.Complete();
+
             GetRef();
             UpdateState();
             Proceed();
@@ -66,7 +67,36 @@ namespace Core.GamePlay
         }
         protected virtual void HandleControl()
         {
+            if (Input.GetKeyUp(KeyCode.G))
+                HandleG();
+            if (Input.GetKeyUp(KeyCode.R))
+                HandleR();
+            if (Input.GetKeyUp(KeyCode.X))
+                HandleX();
+            if (Input.GetKeyUp(KeyCode.Y))
+                HandleY();
+            if (Input.GetKeyUp(KeyCode.Z))
+                HandleZ();
+            if (Input.GetKeyUp(KeyCode.Escape))
+                HandleEsc();
 
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+                HandleMouseLeftDown();
+            else if (Input.GetKeyUp(KeyCode.Mouse0))
+                HandleMouseLeftUp();
+
+            if (Input.GetKeyDown(KeyCode.Mouse1))
+                HandleMouseRightDown();
+            else if (Input.GetKeyUp(KeyCode.Mouse1))
+                HandleMouseRightUp();
+
+            var move = Input.mousePositionDelta;
+            if (move.magnitude > 0.001f)
+                HandleMouseMove(move);
+
+            var scroll = Input.mouseScrollDelta;
+            if (scroll.magnitude > 0.001f)
+                HandleMouseScroll(scroll);
         }
         protected virtual void UpdateUI()
         {
@@ -91,6 +121,58 @@ namespace Core.GamePlay
 
             CameraEngineBase.UpdateFrame();
         }
+
+        #region CONTROLLER
+        protected virtual void HandleG()
+        {
+
+        }
+        protected virtual void HandleR()
+        {
+
+        }
+        protected virtual void HandleX()
+        {
+
+        }
+        protected virtual void HandleY()
+        {
+
+        }
+        protected virtual void HandleZ()
+        {
+
+        }
+        protected virtual void HandleEsc()
+        {
+
+        }
+
+        protected virtual void HandleMouseLeftDown()
+        {
+
+        }
+        protected virtual void HandleMouseLeftUp()
+        {
+
+        }
+        protected virtual void HandleMouseRightDown()
+        {
+
+        }
+        protected virtual void HandleMouseRightUp()
+        {
+
+        }
+        protected virtual void HandleMouseMove(Vector3 move)
+        {
+
+        }
+        protected virtual void HandleMouseScroll(Vector3 scroll)
+        {
+
+        }
+        #endregion
     }
 
     public struct GameEvent : IComponentData
@@ -109,6 +191,8 @@ namespace Core.GamePlay
             Saving = 7,
             Loading = 8,
             Rotation = 9,
+            LookAround = 10,
+
         }
     }
 }
