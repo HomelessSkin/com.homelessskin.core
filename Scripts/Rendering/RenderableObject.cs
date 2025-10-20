@@ -10,6 +10,11 @@ namespace Core.Rendering
     [CreateAssetMenu(fileName = "Renderable_", menuName = "Presentation/RenderableObject")]
     public class RenderableObject : KeyScriptable
     {
+#if UNITY_EDITOR
+        [Space]
+        public Material DragMaterial;
+#endif
+        [Space]
         public bool ReceiveShadows = false;
         public ShadowCastingMode ShadowCasting = ShadowCastingMode.Off;
         public Mesh Mesh;
