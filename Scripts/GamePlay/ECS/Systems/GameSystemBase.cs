@@ -1,6 +1,3 @@
-using Core.Rendering;
-using Core.UI;
-
 using Unity.Collections;
 using Unity.Entities;
 
@@ -13,8 +10,8 @@ namespace Core.GamePlay
         protected GameEvent.Type State;
         protected GameEvent.Type PrevState;
 
-        protected UIManagerBase UIManagerBase;
-        protected CameraEngineBase CameraEngineBase;
+        //protected UIManagerBase UIManagerBase;
+        //protected CameraEngineBase CameraEngineBase;
 
         protected override void OnCreate()
         {
@@ -34,15 +31,15 @@ namespace Core.GamePlay
 
         protected virtual void GetRef()
         {
-            if (!UIManagerBase)
-                UIManagerBase = GameObject
-                    .FindGameObjectWithTag("UIManager")
-                    .GetComponent<UIManagerBase>();
+            //if (!UIManagerBase)
+            //    UIManagerBase = GameObject
+            //        .FindGameObjectWithTag("UIManager")
+            //        .GetComponent<UIManagerBase>();
 
-            if (!CameraEngineBase)
-                CameraEngineBase = GameObject
-                    .FindGameObjectWithTag("MainCamera")
-                    .GetComponent<CameraEngineBase>();
+            //if (!CameraEngineBase)
+            //    CameraEngineBase = GameObject
+            //        .FindGameObjectWithTag("MainCamera")
+            //        .GetComponent<CameraEngineBase>();
         }
         protected virtual void UpdateState()
         {
@@ -113,13 +110,13 @@ namespace Core.GamePlay
 
         void UpdateCamera()
         {
-            var query = EntityManager.CreateEntityQuery(typeof(SetCameraRequest));
-            var requests = query.ToComponentDataArray<SetCameraRequest>(Allocator.Temp);
-            for (int r = 0; r < requests.Length; r++)
-                CameraEngineBase.SetTarget(requests[r]);
-            EntityManager.DestroyEntity(query);
+            //var query = EntityManager.CreateEntityQuery(typeof(SetCameraRequest));
+            //var requests = query.ToComponentDataArray<SetCameraRequest>(Allocator.Temp);
+            //for (int r = 0; r < requests.Length; r++)
+            //    CameraEngineBase.SetTarget(requests[r]);
+            //EntityManager.DestroyEntity(query);
 
-            CameraEngineBase.UpdateFrame();
+            //CameraEngineBase.UpdateFrame();
         }
 
         #region CONTROLLER

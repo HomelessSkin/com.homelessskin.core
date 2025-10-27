@@ -6,7 +6,6 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
-using Unity.Physics.Authoring;
 using Unity.Transforms;
 
 using UnityEngine;
@@ -15,41 +14,6 @@ namespace Core.Util
 {
     public static class Sys
     {
-        public static void Clear(ref this PhysicsCategoryTags filter)
-        {
-            filter.Category00 = false;
-            filter.Category01 = false;
-            filter.Category02 = false;
-            filter.Category03 = false;
-            filter.Category04 = false;
-            filter.Category05 = false;
-            filter.Category06 = false;
-            filter.Category07 = false;
-            filter.Category08 = false;
-            filter.Category09 = false;
-            filter.Category10 = false;
-            filter.Category11 = false;
-            filter.Category12 = false;
-            filter.Category13 = false;
-            filter.Category14 = false;
-            filter.Category15 = false;
-            filter.Category16 = false;
-            filter.Category17 = false;
-            filter.Category18 = false;
-            filter.Category19 = false;
-            filter.Category20 = false;
-            filter.Category21 = false;
-            filter.Category22 = false;
-            filter.Category23 = false;
-            filter.Category24 = false;
-            filter.Category25 = false;
-            filter.Category26 = false;
-            filter.Category27 = false;
-            filter.Category28 = false;
-            filter.Category29 = false;
-            filter.Category30 = false;
-            filter.Category31 = false;
-        }
         public static void Deb<T>(T value) => Debug.Log($"{value}");
         public static void Add_M<T>(T request, EntityManager manager) where T : IComponentData
              => manager.AddComponentObject(manager.CreateEntity(), request);

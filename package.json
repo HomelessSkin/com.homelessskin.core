@@ -1,7 +1,7 @@
 {
   "name": "com.homelessskin.core",
   "displayName": "Core",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "core",
   "author": {
     "name": "RU_1n",
@@ -16,5 +16,8 @@
     "type": "git",
     "url": "https://github.com/homelessskin/shared-core.git"
   },
-  "hideInEditor": false
+  "hideInEditor": false,
+  "dependencies": {
+    "com.unity.entities": "1.3.14"
+  }
 }
