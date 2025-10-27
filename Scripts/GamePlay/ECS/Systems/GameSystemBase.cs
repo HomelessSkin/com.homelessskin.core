@@ -10,9 +10,6 @@ namespace Core.GamePlay
         protected GameEvent.Type State;
         protected GameEvent.Type PrevState;
 
-        //protected UIManagerBase UIManagerBase;
-        //protected CameraEngineBase CameraEngineBase;
-
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -31,15 +28,6 @@ namespace Core.GamePlay
 
         protected virtual void GetRef()
         {
-            //if (!UIManagerBase)
-            //    UIManagerBase = GameObject
-            //        .FindGameObjectWithTag("UIManager")
-            //        .GetComponent<UIManagerBase>();
-
-            //if (!CameraEngineBase)
-            //    CameraEngineBase = GameObject
-            //        .FindGameObjectWithTag("MainCamera")
-            //        .GetComponent<CameraEngineBase>();
         }
         protected virtual void UpdateState()
         {
