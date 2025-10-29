@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using TMPro;
@@ -31,6 +32,7 @@ namespace Core.Util
         public static void CreateSpriteAsset(int id, Texture2D texture)
         {
             var asset = TMP_SpriteAsset.CreateInstance<TMP_SpriteAsset>();
+            asset.spriteInfoList = new List<TMP_Sprite>();
 
             var s = new TMP_Sprite();
             s.id = id;
