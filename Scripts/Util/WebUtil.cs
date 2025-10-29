@@ -29,15 +29,13 @@ namespace Core.Util
             }
         }
 
-        public static void CreateSpriteAsset(int id, Texture2D texture)
+        public static void CreateSpriteAsset(string name, Texture2D texture)
         {
-            var name = id.ToString();
             var asset = TMP_SpriteAsset.CreateInstance<TMP_SpriteAsset>();
             asset.name = name;
             asset.spriteInfoList = new List<TMP_Sprite>();
 
             var s = new TMP_Sprite();
-            s.id = id;
             s.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero);
             s.width = texture.width;
             s.height = texture.height;
