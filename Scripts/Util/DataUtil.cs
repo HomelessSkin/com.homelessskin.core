@@ -413,6 +413,37 @@ namespace Core.Util
 
     public static class DataUtil
     {
+        public static void ResizeBilinear(this Texture2D source, int newWidth, int newHeight)
+        {
+            var result = new Texture2D(newWidth, newHeight);
+            var pixels = new Color32[newWidth * newHeight];
+
+            for (int y = 0; y < newHeight; y++)
+                for (int x = 0; x < newWidth; x++)
+                {
+                    var u = x / (float)newWidth;
+                    var v = y / (float)newHeight;
+
+                    var srcX = u * source.width;
+                    var srcY = v * source.height;
+
+                    var x1 = (int)Mathf.Floor(srcX);
+                    var y1 = (int)Mathf.Floor(srcY);
+                    var x2 = Mathf.Min(x1 + 1, source.width - 1);
+                    var y2 = Mathf.Min(y1 + 1, source.height - 1);
+
+                    var xLerp = srcX - x1;
+                    var yLerp = srcY - y1;
+
+                    var top = Color.Lerp(source.GetPixel(x1, y1), source.GetPixel(x2, y1), xLerp);
+                    var bottom = Color.Lerp(source.GetPixel(x1, y2), source.GetPixel(x2, y2), xLerp);
+
+                    pixels[y * newWidth + x] = Color.Lerp(top, bottom, yLerp);
+                }
+
+            result.SetPixels32(pixels);
+            result.Apply();
+        }
         public static void FitSize<T, U>(ref T[] values, U[] other)
         {
             if (values.Length < other.Length)
