@@ -9,7 +9,7 @@ namespace Core.Util
     {
         public static async Task<Texture2D> DownloadSpriteTexture(string url)
         {
-            using (UnityWebRequest webRequest = UnityWebRequestTexture.GetTexture(url))
+            using (var webRequest = UnityWebRequestTexture.GetTexture(url))
             {
                 var operation = webRequest.SendWebRequest();
                 while (!operation.isDone)
