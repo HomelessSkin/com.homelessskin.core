@@ -413,7 +413,7 @@ namespace Core.Util
 
     public static class DataUtil
     {
-        public static void ResizeBilinear(this Texture2D source, int newWidth, int newHeight)
+        public static Texture2D ResizeBilinear(Texture2D source, int newWidth, int newHeight)
         {
             var result = new Texture2D(newWidth, newHeight);
             var pixels = new Color32[newWidth * newHeight];
@@ -443,6 +443,8 @@ namespace Core.Util
 
             result.SetPixels32(pixels);
             result.Apply();
+
+            return result;
         }
         public static void FitSize<T, U>(ref T[] values, U[] other)
         {
