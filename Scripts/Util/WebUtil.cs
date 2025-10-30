@@ -18,11 +18,7 @@ namespace Core.Util
                 if (webRequest.result == UnityWebRequest.Result.Success)
                     return DownloadHandlerTexture.GetContent(webRequest);
                 else
-                {
-                    Debug.Log($"Failed to download sprite: {webRequest.error}");
-
                     return null;
-                }
             }
         }
     }
