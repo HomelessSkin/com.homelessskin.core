@@ -418,8 +418,8 @@ namespace Core.Util
             var result = new Texture2D(newWidth, newHeight);
             var pixels = new Color32[newWidth * newHeight];
 
-            for (int y = 0; y < newHeight; y++)
-                for (int x = 0; x < newWidth; x++)
+            for (int y = 1; y < newHeight - 1; y++)
+                for (int x = 1; x < newWidth - 1; x++)
                 {
                     var u = x / (float)newWidth;
                     var v = y / (float)newHeight;
