@@ -1174,6 +1174,8 @@ namespace Core.Util
 
         public void Prepare()
         {
+            TextureMap = new bool[SpriteWidth * SpriteWidth];
+
             for (int d = 0; d < DefaultSprites.Length; d++)
                 Draw(DefaultSprites[d], d, d);
         }
