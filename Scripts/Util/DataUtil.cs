@@ -1223,15 +1223,7 @@ namespace Core.Util
 
             return smile.Item1;
         }
-        public bool HasSprite(int hash, out int id)
-        {
-            if (HashSprite.TryGetValue(hash, out var value))
-                id = value.Item1;
-            else
-                id = -1;
-
-            return id >= 0;
-        }
+        public bool HasSprite(int hash) => HashSprite.ContainsKey(hash);
     }
     #endregion
 }

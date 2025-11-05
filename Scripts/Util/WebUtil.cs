@@ -5,20 +5,21 @@ using UnityEngine.Networking;
 
 namespace Core.Util
 {
-    public static class Web
+    namespace Core.Util
     {
-        public static async Task<Texture2D> DownloadSpriteTexture(string url)
+        public static class Web
         {
-            using (var webRequest = UnityWebRequestTexture.GetTexture(url))
+            public static async Task<Texture2D> DownloadSpriteTexture(string url)
             {
-                var operation = webRequest.SendWebRequest();
-                while (!operation.isDone)
-                    await Task.Yield();
+                using (var webRequest = UnityWebRequestTexture.GetTexture(url))
+                {
+                    await webRequest.SendWebRequest();
 
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                    return DownloadHandlerTexture.GetContent(webRequest);
-                else
-                    return null;
+                    if (webRequest.result == UnityWebRequest.Result.Success)
+                        return DownloadHandlerTexture.GetContent(webRequest);
+                    else
+                        return null;
+                }
             }
         }
     }
