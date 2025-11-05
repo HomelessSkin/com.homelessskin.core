@@ -1164,14 +1164,47 @@ namespace Core.Util
     [Serializable]
     public class StreamingSprites
     {
-        public int DefaultSpritesCount;
         public int SpriteWidth;
         public Texture2D Texture;
+        public Texture2D[] DefaultSprites;
         public TMP_SpriteAsset Asset;
 
         public bool[] TextureMap;
         public Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
 
+        public void Prepare()
+        {
+            for (int d = 0; d < DefaultSprites.Length; d++)
+                Draw(DefaultSprites[d], d, d);
+        }
+        public void Draw(Texture2D smile, int hash, int id = -1)
+        {
+            if (id < 0)
+            {
+                var got = false;
+                for (int t = DefaultSprites.Length; t < TextureMap.Length; t++)
+                    if (!TextureMap[t])
+                    {
+                        got = TextureMap[t] = true;
+                        id = t;
+
+                        break;
+                    }
+
+                if (!got)
+                    id = UnityEngine.Random.Range(DefaultSprites.Length, SpriteWidth * SpriteWidth);
+            }
+
+            HashSprite[hash] = (id, new List<GameObject>());
+
+            smile = DataUtil.ResizeBilinear(smile, 64, 64);
+            var x = 64 * (id % SpriteWidth);
+            var y = Texture.height - 64 * (id / SpriteWidth + 1);
+
+            Texture.SetPixels32(x, y, 64, 64, smile.GetPixels32());
+            Texture.Apply();
+            Asset.UpdateLookupTables();
+        }
         public int GetSpriteID(int key, GameObject requester)
         {
             var smile = HashSprite[key];
@@ -1184,32 +1217,6 @@ namespace Core.Util
             }
 
             return smile.Item1;
-        }
-        public void Draw(Texture2D smile, int hash)
-        {
-            var id = -1;
-            for (int t = DefaultSpritesCount; t < TextureMap.Length; t++)
-                if (!TextureMap[t])
-                {
-                    TextureMap[t] = true;
-
-                    id = t;
-
-                    break;
-                }
-
-            if (id < 0)
-                id = UnityEngine.Random.Range(DefaultSpritesCount, SpriteWidth * SpriteWidth);
-
-            HashSprite[hash] = (id, new List<GameObject>());
-
-            smile = DataUtil.ResizeBilinear(smile, 64, 64);
-            var x = 64 * (id % SpriteWidth);
-            var y = Texture.height - 64 * (id / SpriteWidth + 1);
-
-            Texture.SetPixels32(x, y, 64, 64, smile.GetPixels32());
-            Texture.Apply();
-            Asset.UpdateLookupTables();
         }
         public bool HasSprite(int hash, out int id)
         {
