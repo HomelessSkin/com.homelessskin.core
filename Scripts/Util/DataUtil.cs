@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using TMPro;
+
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -188,6 +190,7 @@ namespace Core.Util
         }
     }
 
+    #region BEZIER
     public static class Bezier
     {
         public static NativeList<int> GetCurve(NativeList<float3> points, int width, float step)
@@ -266,7 +269,9 @@ namespace Core.Util
             return list;
         }
     }
+    #endregion
 
+    #region POISSON
     [System.Serializable]
     public struct Poisson
     {
@@ -410,6 +415,7 @@ namespace Core.Util
             }
         }
     }
+    #endregion
 
     public static class DataUtil
     {
@@ -961,6 +967,7 @@ namespace Core.Util
             return arr;
         }
 
+        #region DIRECTIONS
         public static readonly Vector3Int[] Directions = new Vector3Int[6]
         {
             Vector3Int.up,
@@ -970,6 +977,9 @@ namespace Core.Util
             Vector3Int.left,
             Vector3Int.down,
          };
+        #endregion
+
+        #region YROTATIONS
         public static readonly Quaternion[] YRotations = new Quaternion[6]
         {
             // Counter-clockwise rotations (positive angles)
@@ -982,7 +992,9 @@ namespace Core.Util
             new Quaternion(0f, -1f, 0f, 0f),                                       // 180° CW
             new Quaternion(0f, -0.7071068f, 0f, -0.7071068f)  // 270° CW
         };
+        #endregion
 
+        #region EDGES
         static readonly int2[] Edges = new int2[12]
         {
             // X-axis edges (min to max in x)
@@ -992,8 +1004,10 @@ namespace Core.Util
             // Z-axis edges (min to max in z)
             new int2(0, 1), new int2(2, 3), new int2(4, 5), new int2(6, 7)
         };
+        #endregion
     }
 
+    #region ELBO LOCAL TRANSFORM
     [System.Serializable]
     public struct ElboLocalTransform
     {
@@ -1011,7 +1025,9 @@ namespace Core.Util
             }
         }
     }
+    #endregion
 
+    #region BYTE2
     [System.Serializable]
     public struct byte2
     {
@@ -1024,7 +1040,9 @@ namespace Core.Util
             y = yy;
         }
     }
+    #endregion
 
+    #region BATCH
     public struct Batch
     {
         public int Count;
@@ -1032,6 +1050,9 @@ namespace Core.Util
 
         public List<Matrix4x4> Value;
     }
+    #endregion
+
+    #region ROTATION DEFINITION
     public struct RotationDefinition
     {
         public Vector3Int EulerAngles;
@@ -1043,6 +1064,9 @@ namespace Core.Util
             RotationMatrix = DataUtil.CalculateRotationMatrix(x, y, z);
         }
     }
+    #endregion
+
+    #region TRIANGLE
     public struct Triangle
     {
         public float Area;
@@ -1087,8 +1111,11 @@ namespace Core.Util
             return (a * bcLength + b * caLength + c * abLength) / perimeter;
         }
     }
+    #endregion
 
     public enum BlockFace : byte { Top = 0, Front = 1, Right = 2, Back = 3, Left = 4, Bot = 5 }
+
+    #region KEY SCRIPTABLE
     public abstract class KeyScriptable : ScriptableObject
     {
         public int ID;
@@ -1131,4 +1158,68 @@ namespace Core.Util
         }
 #endif
     }
+    #endregion
+
+    #region STREAMING SPRITES
+    [Serializable]
+    public class StreamingSprites
+    {
+        public int DefaultSpritesCount;
+        public int SpriteWidth;
+        public Texture2D Texture;
+        public TMP_SpriteAsset Asset;
+
+        public bool[] TextureMap;
+        public Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
+
+        public int GetSpriteID(int key, GameObject requester)
+        {
+            var smile = HashSprite[key];
+
+            if (!smile.Item2.Contains(requester))
+            {
+                smile.Item2.Add(requester);
+
+                HashSprite[key] = smile;
+            }
+
+            return smile.Item1;
+        }
+        public void Draw(Texture2D smile, int hash)
+        {
+            var id = -1;
+            for (int t = DefaultSpritesCount; t < TextureMap.Length; t++)
+                if (!TextureMap[t])
+                {
+                    TextureMap[t] = true;
+
+                    id = t;
+
+                    break;
+                }
+
+            if (id < 0)
+                id = UnityEngine.Random.Range(DefaultSpritesCount, SpriteWidth * SpriteWidth);
+
+            HashSprite[hash] = (id, new List<GameObject>());
+
+            smile = DataUtil.ResizeBilinear(smile, 64, 64);
+            var x = 64 * (id % SpriteWidth);
+            var y = Texture.height - 64 * (id / SpriteWidth + 1);
+
+            Texture.SetPixels32(x, y, 64, 64, smile.GetPixels32());
+            Texture.Apply();
+            Asset.UpdateLookupTables();
+        }
+        public bool HasSprite(int hash, out int id)
+        {
+            if (HashSprite.TryGetValue(hash, out var value))
+                id = value.Item1;
+            else
+                id = -1;
+
+            return id >= 0;
+        }
+    }
+    #endregion
 }
