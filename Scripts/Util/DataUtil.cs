@@ -1164,7 +1164,7 @@ namespace Core.Util
     [Serializable]
     public class StreamingSprites
     {
-        public int SpriteWidth;
+        public int SpriteDensity;
         public Texture2D Texture;
         public Texture2D[] DefaultSprites;
         public TMP_SpriteAsset Asset;
@@ -1172,9 +1172,12 @@ namespace Core.Util
         public bool[] TextureMap;
         public Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
 
+        public int WidthSprites => Texture.width / SpriteDensity;
+        public int HeightSprites => Texture.height / SpriteDensity;
+
         public void Prepare()
         {
-            TextureMap = new bool[SpriteWidth * SpriteWidth];
+            TextureMap = new bool[SpriteDensity * SpriteDensity];
 
             for (int d = 0; d < DefaultSprites.Length; d++)
                 Draw(DefaultSprites[d], d, d);
@@ -1194,16 +1197,16 @@ namespace Core.Util
                     }
 
                 if (!got)
-                    id = UnityEngine.Random.Range(DefaultSprites.Length, SpriteWidth * SpriteWidth);
+                    id = UnityEngine.Random.Range(DefaultSprites.Length, SpriteDensity * SpriteDensity);
             }
 
             HashSprite[hash] = (id, new List<GameObject>());
 
-            smile = DataUtil.ResizeBilinear(smile, 64, 64);
-            var x = 64 * (id % SpriteWidth);
-            var y = Texture.height - 64 * (id / SpriteWidth + 1);
+            smile = DataUtil.ResizeBilinear(smile, WidthSprites, HeightSprites);
+            var x = WidthSprites * (id % SpriteDensity);
+            var y = Texture.height - HeightSprites * (id / SpriteDensity + 1);
 
-            Texture.SetPixels32(x, y, 64, 64, smile.GetPixels32());
+            Texture.SetPixels32(x, y, WidthSprites, HeightSprites, smile.GetPixels32());
             Texture.Apply();
             Asset.UpdateLookupTables();
         }
