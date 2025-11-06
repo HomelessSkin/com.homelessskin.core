@@ -14,6 +14,7 @@ using Unity.Mathematics;
 
 #if UNITY_EDITOR
 using UnityEditor;
+
 #endif
 
 using UnityEngine;
@@ -1210,11 +1211,37 @@ namespace Core.Util
             Texture.Apply();
             Asset.UpdateLookupTables();
         }
-        public int GetSpriteID(int key, GameObject requester)
+        public void RemoveRange(List<int> toRemove, GameObject holder)
+        {
+            for (int s = 0; s < toRemove.Count; s++)
+            {
+                var key = toRemove[s];
+                if (NonDefKey(key))
+                {
+                    var smile = HashSprite[key];
+                    if (smile.Item2.Contains(holder))
+                    {
+                        smile.Item2.Remove(holder);
+
+                        if (smile.Item2.Count == 0)
+                        {
+                            TextureMap[smile.Item1] = false;
+
+                            HashSprite.Remove(key);
+                        }
+                        else
+                            HashSprite[key] = smile;
+                    }
+                }
+            }
+        }
+        public int GetSpriteID(int key, GameObject requester = null)
         {
             var smile = HashSprite[key];
 
-            if (!smile.Item2.Contains(requester))
+            if (NonDefKey(key) &&
+                 requester &&
+                !smile.Item2.Contains(requester))
             {
                 smile.Item2.Add(requester);
 
@@ -1224,6 +1251,8 @@ namespace Core.Util
             return smile.Item1;
         }
         public bool HasSprite(int hash) => HashSprite.ContainsKey(hash);
+
+        bool NonDefKey(int key) => key < 0 || key >= DefaultSprites.Length;
     }
     #endregion
 }
