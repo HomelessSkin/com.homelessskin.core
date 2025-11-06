@@ -1171,6 +1171,7 @@ namespace Core.Util
         public TMP_SpriteAsset Asset;
 
         public bool[] TextureMap;
+        public List<int> ReservedKeys = new List<int>();
         public Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
 
         public int WidthSprites => Texture.width / SpriteDensity;
@@ -1183,6 +1184,8 @@ namespace Core.Util
             for (int d = 0; d < DefaultSprites.Length; d++)
                 Draw(DefaultSprites[d], d, d);
         }
+        public void ReserveKey(int key) => ReservedKeys.Add(key);
+        public void UnreserveKey(int key) => ReservedKeys.Remove(key);
         public void Draw(Texture2D smile, int hash, int id = -1)
         {
             if (id < 0)
@@ -1216,7 +1219,7 @@ namespace Core.Util
             for (int s = 0; s < toRemove.Count; s++)
             {
                 var key = toRemove[s];
-                if (NonDefKey(key))
+                if (IsNonDefKey(key))
                 {
                     var smile = HashSprite[key];
                     if (smile.Item2.Contains(holder))
@@ -1239,7 +1242,7 @@ namespace Core.Util
         {
             var smile = HashSprite[key];
 
-            if (NonDefKey(key) &&
+            if (IsNonDefKey(key) &&
                  requester &&
                 !smile.Item2.Contains(requester))
             {
@@ -1251,8 +1254,9 @@ namespace Core.Util
             return smile.Item1;
         }
         public bool HasSprite(int hash) => HashSprite.ContainsKey(hash);
+        public bool IsKeyReserved(int key) => ReservedKeys.Contains(key);
 
-        bool NonDefKey(int key) => key < 0 || key >= DefaultSprites.Length;
+        bool IsNonDefKey(int key) => key < 0 || key >= DefaultSprites.Length;
     }
     #endregion
 }
