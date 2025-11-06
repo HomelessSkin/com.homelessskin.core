@@ -1165,14 +1165,15 @@ namespace Core.Util
     [Serializable]
     public class StreamingSprites
     {
+        public TMP_SpriteAsset Asset;
+
         public int SpriteDensity;
         public Texture2D Texture;
         public Texture2D[] DefaultSprites;
-        public TMP_SpriteAsset Asset;
 
-        public bool[] TextureMap;
-        public List<int> ReservedKeys = new List<int>();
-        public Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
+        bool[] TextureMap;
+        List<int> ReservedKeys = new List<int>();
+        Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
 
         public int WidthSprites => Texture.width / SpriteDensity;
         public int HeightSprites => Texture.height / SpriteDensity;
