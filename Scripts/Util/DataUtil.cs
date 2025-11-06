@@ -1185,9 +1185,11 @@ namespace Core.Util
                 Draw(DefaultSprites[d], d, d);
         }
         public void ReserveKey(int key) => ReservedKeys.Add(key);
-        public void UnreserveKey(int key) => ReservedKeys.Remove(key);
         public void Draw(Texture2D smile, int hash, int id = -1)
         {
+            if (IsKeyReserved(hash))
+                UnreserveKey(hash);
+
             if (id < 0)
             {
                 var got = false;
@@ -1257,6 +1259,7 @@ namespace Core.Util
         public bool IsKeyReserved(int key) => ReservedKeys.Contains(key);
 
         bool IsNonDefKey(int key) => key < 0 || key >= DefaultSprites.Length;
+        void UnreserveKey(int key) => ReservedKeys.Remove(key);
     }
     #endregion
 }
