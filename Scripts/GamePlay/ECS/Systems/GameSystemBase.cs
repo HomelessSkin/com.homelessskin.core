@@ -1,3 +1,5 @@
+using Core.Util;
+
 using Unity.Collections;
 using Unity.Entities;
 
@@ -5,7 +7,7 @@ using UnityEngine;
 
 namespace Core.GamePlay
 {
-    public abstract partial class GameSystemBase : SystemBase
+    public abstract partial class GameSystemBase : BehaviourSystem
     {
         protected GameEvent.Type State;
         protected GameEvent.Type PrevState;
@@ -16,9 +18,8 @@ namespace Core.GamePlay
         }
         protected override void OnUpdate()
         {
-            this.Dependency.Complete();
+            base.OnUpdate();
 
-            GetRef();
             UpdateState();
             Proceed();
             HandleControl();
@@ -26,9 +27,6 @@ namespace Core.GamePlay
             UpdateUI();
         }
 
-        protected virtual void GetRef()
-        {
-        }
         protected virtual void UpdateState()
         {
             var query = EntityManager.CreateEntityQuery(typeof(GameEvent));

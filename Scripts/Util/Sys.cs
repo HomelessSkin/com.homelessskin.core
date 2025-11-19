@@ -275,4 +275,58 @@ namespace Core.Util
         public int GetID();
         public Entity GetValue() => Entity.Null;
     }
+
+    public interface IDefaultable<T> : IComponentData
+    {
+        bool Initialized { get; set; }
+        T CreateDefault();
+    }
+
+    public abstract partial class BehaviourSystem : SystemBase
+    {
+        protected override void OnUpdate()
+        {
+            this.Dependency.Complete();
+
+            GetRef();
+        }
+
+        protected virtual void GetRef() { }
+    }
+
+    public abstract partial class ReloadSingletoneSystem<T> : BehaviourSystem where T : unmanaged, IDefaultable<T>
+    {
+        protected RefRW<T> Value;
+
+        protected override void OnUpdate()
+        {
+            base.OnUpdate();
+
+            Reload();
+            if (!Value.IsValid ||
+                 !Value.ValueRO.Initialized)
+                return;
+
+            Proceed();
+        }
+
+        protected abstract void Proceed();
+
+        void Reload()
+        {
+            var query = EntityManager.CreateEntityQuery(typeof(T));
+            switch (query.CalculateEntityCount())
+            {
+                case 0:
+                Sys.Add<T>(default(T).CreateDefault(), EntityManager);
+                break;
+                case 1:
+                Value = query.GetSingletonRW<T>();
+                break;
+                default:
+                EntityManager.DestroyEntity(query);
+                break;
+            }
+        }
+    }
 }
