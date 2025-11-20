@@ -290,7 +290,6 @@ namespace Core.Util
 
             GetRef();
         }
-
         protected virtual void GetRef() { }
     }
 
