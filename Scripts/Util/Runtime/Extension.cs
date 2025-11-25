@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Core.Util
 {
-    public static class Extensions
+    public static class Extension
     {
         public static void SavePrefString(this IPrefKey key, string value)
         {
