@@ -9,7 +9,7 @@ namespace Core.Util
     {
         public State _State { get; set; }
 
-        void SetState(State state);
+        protected void SetState(State state);
 
         public enum State : byte
         {
