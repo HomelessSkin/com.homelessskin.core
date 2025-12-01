@@ -14,7 +14,7 @@ namespace Core.Util
         {
             Null = 0,
             Default = 1,
-
+            Exit = 2,
         }
     }
 }
