@@ -7,10 +7,10 @@ namespace Core.Util
 
     public interface IStateMachine
     {
-        protected State _State { get; set; }
-        protected void SetState(State state);
+        public State _State { get; }
+        public void SetState(State state);
 
-        protected enum State : byte
+        public enum State : byte
         {
             Null = 0,
             Default = 1,
