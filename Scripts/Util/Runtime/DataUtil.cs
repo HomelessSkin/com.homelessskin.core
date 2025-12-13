@@ -1213,7 +1213,20 @@ namespace Core.Util
             var x = WidthSprites * (id % SpriteDensity);
             var y = Texture.height - HeightSprites * (id / SpriteDensity + 1);
 
-            Texture.SetPixels32(x, y, WidthSprites, HeightSprites, smile.GetPixels32());
+            var pixels = smile.GetPixels32();
+            for (int p = 0; p < pixels.Length; p++)
+            {
+                var pixel = pixels[p];
+                if (pixel.r < 10 &&
+                     pixel.g < 10 &&
+                     pixel.b < 10)
+                {
+                    pixel.r = pixel.g = pixel.b = 10;
+                    pixels[p] = pixel;
+                }
+            }
+
+            Texture.SetPixels32(x, y, WidthSprites, HeightSprites, pixels);
             Texture.Apply();
             Asset.UpdateLookupTables();
         }
