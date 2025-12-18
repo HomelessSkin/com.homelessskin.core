@@ -1,11 +1,9 @@
-using Core.Util;
-
 using Unity.Collections;
 using Unity.Entities;
 
 using UnityEngine;
 
-namespace Core.GamePlay
+namespace Core
 {
     public abstract partial class GameSystemBase : BehaviourSystem
     {

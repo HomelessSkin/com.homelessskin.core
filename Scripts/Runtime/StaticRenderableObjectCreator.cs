@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 using static Unity.Mathematics.math;
 
-namespace Core.Util
+namespace Core
 {
     public class StaticRenderableObjectCreator : MonoBehaviour
     {

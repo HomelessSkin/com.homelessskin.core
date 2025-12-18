@@ -3,7 +3,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-namespace Core.Util
+namespace Core
 {
     [CustomEditor(typeof(KeyScriptable), true)]
     public class KeyScriptableEditor : Editor

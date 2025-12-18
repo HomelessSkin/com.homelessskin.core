@@ -1,5 +1,10 @@
-namespace Core.Util
+namespace Core
 {
+    public interface IPrefabID
+    {
+        public int GetID();
+    }
+
     public interface IPrefKey
     {
         public string _Key { get; }

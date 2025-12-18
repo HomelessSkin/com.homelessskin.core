@@ -1,12 +1,15 @@
 {
-    "name": "com.homelessskin.core.gameplay",
-    "rootNamespace": "",
+    "name": "com.homelessskin.core",
+    "rootNamespace": "Core",
     "references": [
         "GUID:2665a8d13d1b3f18800f46e256720795",
         "GUID:e0cd26848372d4e5c891c569017e11f1",
         "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:8819f35a0fc84499b990e90a4ca1911f",
         "GUID:d8b63aba1907145bea998dd612889d6b",
-        "GUID:1f2c4f0e7db738b4482b62829efd5d9c"
+        "GUID:5f3cf485eb0554709a8abbeace890c86",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:a5baed0c9693541a5bd947d336ec7659"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

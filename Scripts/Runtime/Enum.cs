@@ -1,4 +1,4 @@
-namespace Core.Util
+namespace Core
 {
     public enum AnimationType : int
     {

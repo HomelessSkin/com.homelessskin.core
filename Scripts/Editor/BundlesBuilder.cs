@@ -6,7 +6,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-namespace Core.Util
+namespace Core
 {
     public class BundlesBuilder : EditorWindow
     {

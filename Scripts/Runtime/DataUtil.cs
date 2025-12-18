@@ -26,7 +26,7 @@ using static Unity.Mathematics.noise;
 
 using Random = Unity.Mathematics.Random;
 
-namespace Core.Util
+namespace Core
 {
     public static class Lists
     {

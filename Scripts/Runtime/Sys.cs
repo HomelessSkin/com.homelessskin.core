@@ -10,7 +10,7 @@ using Unity.Transforms;
 
 using UnityEngine;
 
-namespace Core.Util
+namespace Core
 {
     public static class Sys
     {
