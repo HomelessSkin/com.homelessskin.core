@@ -19,7 +19,7 @@ namespace Core
                     for (int p = 0; p < authoring.Prefabs.Length; p++)
                         AppendToBuffer(entity, new Prefab
                         {
-                            ID = authoring.Prefabs[p].GetComponent<IPrefabID>().GetID(),
+                            ID = authoring.Prefabs[p].GetPrefabID(),
                             Value = GetEntity(authoring.Prefabs[p], TransformUsageFlags.Dynamic),
                         });
             }
