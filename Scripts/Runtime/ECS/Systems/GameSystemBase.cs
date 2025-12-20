@@ -1,14 +1,14 @@
 using Unity.Collections;
 using Unity.Entities;
 
-using UnityEngine;
-
 namespace Core
 {
-    public abstract partial class GameSystemBase : BehaviourSystem
+    public abstract partial class GameSystemBase : BehaviourSystem, IStateMachine
     {
-        protected GameEvent.Type State;
-        protected GameEvent.Type PrevState;
+        public IStateMachine.State _State => State;
+        protected IStateMachine.State State;
+        public IStateMachine.State _PrevState => PrevState;
+        protected IStateMachine.State PrevState;
 
         protected override void OnCreate()
         {
@@ -20,9 +20,12 @@ namespace Core
 
             UpdateState();
             Proceed();
-            HandleControl();
-            UpdateCamera();
             UpdateUI();
+        }
+
+        public virtual void SetState(IStateMachine.State state)
+        {
+            State = state;
         }
 
         protected virtual void UpdateState()
@@ -38,46 +41,9 @@ namespace Core
 
             EntityManager.DestroyEntity(query);
         }
-        protected virtual void SetState(GameEvent.Type state)
-        {
-            State = state;
-        }
         protected virtual void Proceed()
         {
 
-        }
-        protected virtual void HandleControl()
-        {
-            if (Input.GetKeyUp(KeyCode.G))
-                HandleG();
-            if (Input.GetKeyUp(KeyCode.R))
-                HandleR();
-            if (Input.GetKeyUp(KeyCode.X))
-                HandleX();
-            if (Input.GetKeyUp(KeyCode.Y))
-                HandleY();
-            if (Input.GetKeyUp(KeyCode.Z))
-                HandleZ();
-            if (Input.GetKeyUp(KeyCode.Escape))
-                HandleEsc();
-
-            if (Input.GetKeyDown(KeyCode.Mouse0))
-                HandleMouseLeftDown();
-            else if (Input.GetKeyUp(KeyCode.Mouse0))
-                HandleMouseLeftUp();
-
-            if (Input.GetKeyDown(KeyCode.Mouse1))
-                HandleMouseRightDown();
-            else if (Input.GetKeyUp(KeyCode.Mouse1))
-                HandleMouseRightUp();
-
-            var move = Input.mousePositionDelta;
-            if (move.magnitude > 0.001f)
-                HandleMouseMove(move);
-
-            var scroll = Input.mouseScrollDelta;
-            if (scroll.magnitude > 0.001f)
-                HandleMouseScroll(scroll);
         }
         protected virtual void UpdateUI()
         {
@@ -91,89 +57,10 @@ namespace Core
         {
 
         }
-
-        void UpdateCamera()
-        {
-            //var query = EntityManager.CreateEntityQuery(typeof(SetCameraRequest));
-            //var requests = query.ToComponentDataArray<SetCameraRequest>(Allocator.Temp);
-            //for (int r = 0; r < requests.Length; r++)
-            //    CameraEngineBase.SetTarget(requests[r]);
-            //EntityManager.DestroyEntity(query);
-
-            //CameraEngineBase.UpdateFrame();
-        }
-
-        #region CONTROLLER
-        protected virtual void HandleG()
-        {
-
-        }
-        protected virtual void HandleR()
-        {
-
-        }
-        protected virtual void HandleX()
-        {
-
-        }
-        protected virtual void HandleY()
-        {
-
-        }
-        protected virtual void HandleZ()
-        {
-
-        }
-        protected virtual void HandleEsc()
-        {
-
-        }
-
-        protected virtual void HandleMouseLeftDown()
-        {
-
-        }
-        protected virtual void HandleMouseLeftUp()
-        {
-
-        }
-        protected virtual void HandleMouseRightDown()
-        {
-
-        }
-        protected virtual void HandleMouseRightUp()
-        {
-
-        }
-        protected virtual void HandleMouseMove(Vector3 move)
-        {
-
-        }
-        protected virtual void HandleMouseScroll(Vector3 scroll)
-        {
-
-        }
-        #endregion
     }
 
     public struct GameEvent : IComponentData
     {
-        public Type Set;
-
-        public enum Type : byte
-        {
-            Idle = 0,
-            Start = 1,
-            Play = 2,
-            Over = 3,
-            Cutscene = 4,
-            Transition = 5,
-            Selection = 6,
-            Saving = 7,
-            Loading = 8,
-            Rotation = 9,
-            LookAround = 10,
-
-        }
+        public IStateMachine.State Set;
     }
 }
