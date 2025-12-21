@@ -4,11 +4,6 @@ namespace Core
 {
     public static class Extension
     {
-        public static void SavePrefString(this IPrefKey key, string value)
-        {
-            PlayerPrefs.SetString(key._Key, value);
-            PlayerPrefs.Save();
-        }
         public static int GetPrefabID(this MonoBehaviour obj)
         {
             var ids = obj.GetComponents<IPrefabID>();
@@ -26,6 +21,11 @@ namespace Core
                 l += ids[i].GetID();
 
             return (int)(l & 0xFFFFFFFFL);
+        }
+        public static void SavePrefString(this IPrefKey key, string value)
+        {
+            PlayerPrefs.SetString(key._Key, value);
+            PlayerPrefs.Save();
         }
         public static string LoadPrefString(this IPrefKey key) => PlayerPrefs.GetString(key._Key);
     }

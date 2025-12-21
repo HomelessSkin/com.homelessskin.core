@@ -2,10 +2,19 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
+using Unity.Collections;
+using Unity.Entities;
+
 using UnityEngine;
 
 namespace Core
 {
+    public interface IKeyBuffer : IBufferElementData
+    {
+        public int GetID();
+        public Entity GetValue() => Entity.Null;
+    }
+
     public interface IStorage
     {
         public string _DataFile { get; }
@@ -74,10 +83,39 @@ namespace Core
 
     public interface IStateMachine
     {
-        public State _State { get; }
-        public State _PrevState { get; }
+        public string _Group { get; }
+        public State _State { get; set; }
+        public State _PrevState { get; set; }
 
-        public void SetState(State state);
+        public void SetState(IStateMachine.State state)
+        {
+            _State = state;
+        }
+        public void UpdateState(EntityManager manager)
+        {
+            var query = manager.CreateEntityQuery(typeof(GameEvent));
+            if (query.IsEmpty)
+                return;
+
+            _PrevState = _State;
+            var entities = query.ToEntityArray(Allocator.Temp);
+            for (int e = 0; e < entities.Length; e++)
+            {
+                var entity = entities[e];
+                var @event = manager.GetComponentObject<GameEvent>(entity);
+                if (@event.Group == "All" ||
+                     @event.Group == _Group ||
+                    (@event.Group == "WithState" && @event.Over == _State))
+                    SetState(@event.Set);
+            }
+        }
+
+        public class GameEvent : IComponentData
+        {
+            public string Group;
+            public IStateMachine.State Over;
+            public IStateMachine.State Set;
+        }
 
         public enum State : byte
         {

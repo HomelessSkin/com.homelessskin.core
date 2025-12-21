@@ -1,13 +1,15 @@
-using Unity.Collections;
 using Unity.Entities;
 
 namespace Core
 {
     public abstract partial class GameSystemBase : BehaviourSystem, IStateMachine
     {
-        public IStateMachine.State _State => State;
+        public string _Group => Group;
+        public IStateMachine.State _State { get => State; set => State = value; }
+        public IStateMachine.State _PrevState { get => PrevState; set => PrevState = value; }
+
+        protected string Group;
         protected IStateMachine.State State;
-        public IStateMachine.State _PrevState => PrevState;
         protected IStateMachine.State PrevState;
 
         protected override void OnCreate()
@@ -17,9 +19,6 @@ namespace Core
         protected override void OnUpdate()
         {
             base.OnUpdate();
-
-            UpdateState();
-            Proceed();
             UpdateUI();
         }
 
@@ -28,23 +27,6 @@ namespace Core
             State = state;
         }
 
-        protected virtual void UpdateState()
-        {
-            var query = EntityManager.CreateEntityQuery(typeof(GameEvent));
-            if (query.CalculateEntityCount() == 0)
-                return;
-
-            PrevState = State;
-            var events = query.ToComponentDataArray<GameEvent>(Allocator.Temp);
-            for (int e = 0; e < events.Length; e++)
-                SetState(events[e].Set);
-
-            EntityManager.DestroyEntity(query);
-        }
-        protected virtual void Proceed()
-        {
-
-        }
         protected virtual void UpdateUI()
         {
 
@@ -57,10 +39,5 @@ namespace Core
         {
 
         }
-    }
-
-    public struct GameEvent : IComponentData
-    {
-        public IStateMachine.State Set;
     }
 }
