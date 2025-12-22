@@ -17,6 +17,7 @@ namespace Core
 
     public interface IStorage
     {
+        public int _MaxSaveFiles { get; }
         public string _DataFile { get; }
         public string _ResourcesPath { get; }
         public string _PersistentPath { get; }

@@ -31,6 +31,30 @@ namespace Core
             manager.AddComponentObject(entity, request1);
             manager.AddComponentObject(entity, request2);
         }
+        /// <summary>
+        /// ето сдвиг нахуй
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Add_Complex<T, U>(T request1, U request2, EntityManager manager)
+            where T : unmanaged, IComponentData
+            where U : IComponentData
+        {
+            var entity = manager.CreateEntity();
+            manager.AddComponentData(entity, request1);
+            manager.AddComponentObject(entity, request2);
+        }
+        /// <summary>
+        /// ето сдвиг нахуй
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Add_Complex<T, U>(U request1, T request2, EntityManager manager)
+            where T : unmanaged, IComponentData
+            where U : IComponentData
+        {
+            var entity = manager.CreateEntity();
+            manager.AddComponentObject(entity, request1);
+            manager.AddComponentData(entity, request2);
+        }
 
         /// <summary>
         /// ето сдвиг нахуй
