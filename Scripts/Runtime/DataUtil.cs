@@ -1044,7 +1044,7 @@ namespace Core
     #endregion
 
     #region BATCH
-    public struct Batch
+    public class Batch
     {
         public int Count;
         public int PropertyIndex;
