@@ -1028,28 +1028,19 @@ namespace Core
     }
     #endregion
 
-    #region BYTE2
-    [System.Serializable]
-    public struct byte2
+    #region FRAME
+    [Serializable]
+    public struct Frame
     {
-        public byte x;
-        public byte y;
+        public float Length;
+        public BoneTransform[] Anchors;
 
-        public byte2(byte xx, byte yy)
+        [Serializable]
+        public struct BoneTransform
         {
-            x = xx;
-            y = yy;
+            public int ID;
+            public float3 Position;
         }
-    }
-    #endregion
-
-    #region BATCH
-    public class Batch
-    {
-        public int Count;
-        public int PropertyIndex;
-
-        public List<Matrix4x4> Value;
     }
     #endregion
 
@@ -1114,6 +1105,31 @@ namespace Core
     }
     #endregion
 
+    #region BYTE2
+    [System.Serializable]
+    public struct byte2
+    {
+        public byte x;
+        public byte y;
+
+        public byte2(byte xx, byte yy)
+        {
+            x = xx;
+            y = yy;
+        }
+    }
+    #endregion
+
+    #region BATCH
+    public class Batch
+    {
+        public int Count;
+        public int PropertyIndex;
+
+        public List<Matrix4x4> Value;
+    }
+    #endregion
+    
     public enum BlockFace : byte { Top = 0, Front = 1, Right = 2, Back = 3, Left = 4, Bot = 5 }
 
     #region KEY SCRIPTABLE
