@@ -1030,17 +1030,19 @@ namespace Core
 
     #region FRAME
     [Serializable]
-    public struct Frame
+    public class Frame
     {
         public float Length;
-        public BoneTransform[] Anchors;
+        public BoneTarget[] BoneTargets;
+    }
+    #endregion
 
-        [Serializable]
-        public struct BoneTransform
-        {
-            public int ID;
-            public float3 Position;
-        }
+    #region BONE TARGET
+    [Serializable]
+    public struct BoneTarget : IComponentData
+    {
+        public int ID;
+        public RigidTransform Transform;
     }
     #endregion
 
@@ -1129,7 +1131,7 @@ namespace Core
         public List<Matrix4x4> Value;
     }
     #endregion
-    
+
     public enum BlockFace : byte { Top = 0, Front = 1, Right = 2, Back = 3, Left = 4, Bot = 5 }
 
     #region KEY SCRIPTABLE
