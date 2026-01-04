@@ -9,12 +9,15 @@ using UnityEngine;
 
 namespace Core
 {
+    #region KEY BUFFER
     public interface IKeyBuffer : IBufferElementData
     {
         public int GetID();
         public Entity GetValue() => Entity.Null;
     }
+    #endregion
 
+    #region STORAGE
     public interface IStorage
     {
         public int _MaxSaveFiles { get; }
@@ -71,17 +74,23 @@ namespace Core
             public virtual string Serialize() => JsonUtility.ToJson(this, true);
         }
     }
+    #endregion
 
+    #region PREFAB ID
     public interface IPrefabID
     {
         public int GetID();
     }
+    #endregion
 
+    #region PREF KEY
     public interface IPrefKey
     {
         public string _Key { get; }
     }
+    #endregion
 
+    #region STATE MACHINE
     public interface IStateMachine
     {
         public string _Group { get; }
@@ -113,9 +122,9 @@ namespace Core
 
         public class GameEvent : IComponentData
         {
-            public string Group;
-            public IStateMachine.State Over;
             public IStateMachine.State Set;
+            public IStateMachine.State Over;
+            public string Group;
         }
 
         public enum State : byte
@@ -139,4 +148,5 @@ namespace Core
 
         }
     }
+    #endregion
 }
