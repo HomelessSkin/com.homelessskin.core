@@ -76,13 +76,6 @@ namespace Core
     }
     #endregion
 
-    #region PREFAB ID
-    public interface IPrefabID
-    {
-        public int GetID();
-    }
-    #endregion
-
     #region PREF KEY
     public interface IPrefKey
     {

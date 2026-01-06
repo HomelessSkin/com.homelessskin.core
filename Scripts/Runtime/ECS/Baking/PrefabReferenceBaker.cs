@@ -6,7 +6,7 @@ namespace Core
 {
     class PrefabReferenceBaker : MonoBehaviour
     {
-        [SerializeField] GameObject[] Prefabs;
+        [SerializeField] PrefabBaker[] Prefabs;
 
         class PrefabReferenceBakerBaker : Baker<PrefabReferenceBaker>
         {
@@ -19,7 +19,7 @@ namespace Core
                     for (int p = 0; p < authoring.Prefabs.Length; p++)
                         AppendToBuffer(entity, new Prefab
                         {
-                            ID = authoring.Prefabs[p].GetPrefabID(),
+                            ID = authoring.Prefabs[p].GetID(),
                             Value = GetEntity(authoring.Prefabs[p], TransformUsageFlags.Dynamic),
                         });
             }

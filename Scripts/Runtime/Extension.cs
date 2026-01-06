@@ -6,7 +6,7 @@ namespace Core
     {
         public static int GetPrefabID(this MonoBehaviour obj)
         {
-            var ids = obj.GetComponents<IPrefabID>();
+            var ids = obj.GetComponents<Personality>();
             var l = 0L;
             for (int i = 0; i < ids.Length; i++)
                 l += ids[i].GetID();
@@ -15,7 +15,7 @@ namespace Core
         }
         public static int GetPrefabID(this GameObject obj)
         {
-            var ids = obj.GetComponents<IPrefabID>();
+            var ids = obj.GetComponents<Personality>();
             var l = 0L;
             for (int i = 0; i < ids.Length; i++)
                 l += ids[i].GetID();
