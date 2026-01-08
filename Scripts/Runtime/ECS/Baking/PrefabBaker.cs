@@ -1,5 +1,7 @@
 using Unity.Entities;
 
+using UnityEditor;
+
 using UnityEngine;
 
 namespace Core
@@ -24,7 +26,13 @@ namespace Core
         void OnValidate()
         {
             if (gameObject.activeInHierarchy)
+            {
                 ID = this.GetPrefabID();
+
+                EditorUtility.SetDirty(this);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
         }
 #endif
     }
