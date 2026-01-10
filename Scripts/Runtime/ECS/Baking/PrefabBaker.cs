@@ -1,6 +1,6 @@
-using Unity.Entities;
+using System;
 
-using UnityEditor;
+using Unity.Entities;
 
 using UnityEngine;
 
@@ -9,16 +9,16 @@ namespace Core
     [DisallowMultipleComponent]
     public class PrefabBaker : MonoBehaviour
     {
-        [SerializeField] int ID;
+        [SerializeField] PrefabID ID;
 
-        public int GetID() => ID;
+        public int GetID() => ID.Value;
 
         class PrefabBakerBaker : Baker<PrefabBaker>
         {
             public override void Bake(PrefabBaker authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new PrefabID { ID = authoring.GetID() });
+                AddComponent(entity, new PrefabID { Value = authoring.GetID() });
             }
         }
 
@@ -26,19 +26,14 @@ namespace Core
         void OnValidate()
         {
             if (gameObject.activeInHierarchy)
-            {
-                ID = this.GetPrefabID();
-
-                EditorUtility.SetDirty(this);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-            }
+                ID.Value = this.GetPrefabID();
         }
 #endif
     }
 
+    [Serializable]
     public struct PrefabID : IComponentData
     {
-        public int ID;
+        public int Value;
     }
 }
