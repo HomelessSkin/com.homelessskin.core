@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -1141,7 +1142,7 @@ namespace Core
         public int GetID() => ID;
 
 #if UNITY_EDITOR
-        public void RandomizeID()
+        public virtual void RandomizeID()
         {
             ID = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
