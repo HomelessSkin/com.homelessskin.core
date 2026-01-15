@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -1133,7 +1132,37 @@ namespace Core
     }
     #endregion
 
-    public enum BlockFace : byte { Top = 0, Front = 1, Right = 2, Back = 3, Left = 4, Bot = 5 }
+    public enum Operation : byte
+    {
+        Null = 0,
+        Add = 1,
+        Subtract = 2,
+        Multiply = 3,
+        Divide = 4,
+
+    }
+    public enum BlockFace : byte
+    {
+        Top = 0,
+        Front = 1,
+        Right = 2,
+        Back = 3,
+        Left = 4,
+        Bot = 5
+    }
+    public enum EntityParameter : int
+    {
+        Null = 0,
+        Damage = 1,
+        PhysResistance = 2,
+        Regeneration = 3,
+        ColdResistance = 4,
+        Health = 5,
+        Charisma = 6,
+
+        LocalToWorld = 100
+
+    }
 
     #region KEY SCRIPTABLE
     public abstract class KeyScriptable : ScriptableObject
@@ -1175,6 +1204,16 @@ namespace Core
             asset = AssetDatabase.LoadAssetAtPath<T>(FileUtil.GetProjectRelativePath(path));
 
             return asset;
+        }
+        public static FixedList128Bytes<int> GetIDs<T>(T[] scriptables) where T : KeyScriptable
+        {
+            var list = new FixedList128Bytes<int>();
+
+            if (scriptables != null)
+                for (int s = 0; s < scriptables.Length && s < 31; s++)
+                    list.Add(scriptables[s].ID);
+
+            return list;
         }
 #endif
     }
