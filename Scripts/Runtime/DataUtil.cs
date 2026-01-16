@@ -1160,7 +1160,7 @@ namespace Core
         Health = 5,
         Charisma = 6,
 
-        LocalToWorld = 100
+        LocalToWorldVelocityLinear = 100
 
     }
 
@@ -1171,6 +1171,8 @@ namespace Core
         public int GetID() => ID;
 
 #if UNITY_EDITOR
+        protected virtual void Reset() => RandomizeID();
+
         public virtual void RandomizeID()
         {
             ID = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
