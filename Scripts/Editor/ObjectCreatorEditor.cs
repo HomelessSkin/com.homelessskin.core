@@ -5,12 +5,12 @@ using UnityEngine;
 
 namespace Core
 {
-    [CustomEditor(typeof(StaticRenderableObjectCreator))]
-    public class StaticRenderableObjectCreatorEditor : Editor
+    [CustomEditor(typeof(ObjectCreator))]
+    public class ObjectCreatorEditor : Editor
     {
         public override void OnInspectorGUI()
         {
-            var creator = (StaticRenderableObjectCreator)target;
+            var creator = (ObjectCreator)target;
             if (creator == null)
                 return;
 

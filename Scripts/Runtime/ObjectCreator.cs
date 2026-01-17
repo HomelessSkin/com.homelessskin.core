@@ -10,7 +10,7 @@ using static Unity.Mathematics.math;
 
 namespace Core
 {
-    public class StaticRenderableObjectCreator : MonoBehaviour
+    public class ObjectCreator : MonoBehaviour
     {
         [SerializeField] Poisson Poisson;
         [SerializeField] SubScene Scene;
