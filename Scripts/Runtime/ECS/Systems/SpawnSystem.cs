@@ -96,7 +96,4 @@ namespace Core
     {
         public long OperationID;
     }
-
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public partial class SpawnSystemGroup : ComponentSystemGroup { }
 }

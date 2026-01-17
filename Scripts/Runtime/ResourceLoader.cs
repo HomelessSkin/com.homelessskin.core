@@ -2,16 +2,15 @@ using UnityEngine;
 
 namespace Core
 {
-    public abstract class ResourceBaker : MonoBehaviour
+    public abstract class ResourceLoader : MonoBehaviour
     {
 #if UNITY_EDITOR
         [SerializeField] bool AutoLoad;
-        [SerializeField] protected string ResourcesPath;
+        [SerializeField] protected string[] ResourcesPaths;
 
         protected virtual void OnValidate()
         {
-            if (AutoLoad &&
-                !string.IsNullOrEmpty(ResourcesPath))
+            if (AutoLoad)
             {
                 AutoLoad = false;
 

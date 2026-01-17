@@ -1160,7 +1160,8 @@ namespace Core
         Health = 5,
         Charisma = 6,
 
-        LocalToWorldVelocityLinear = 100
+        LocalToWorldVelocityLinear = 100,
+        LocalVelocityAngular = 101
 
     }
 
