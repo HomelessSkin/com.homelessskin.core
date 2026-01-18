@@ -4,15 +4,6 @@ namespace Core
 {
     public static class Extension
     {
-        public static int GetPrefabID(this MonoBehaviour obj)
-        {
-            var ids = obj.GetComponents<Personality>();
-            var l = 0L;
-            for (int i = 0; i < ids.Length; i++)
-                l += ids[i].GetID();
-
-            return (int)(l & 0xFFFFFFFFL);
-        }
         public static int GetPrefabID(this GameObject obj)
         {
             var ids = obj.GetComponents<Personality>();

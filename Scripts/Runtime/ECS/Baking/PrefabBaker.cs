@@ -26,7 +26,7 @@ namespace Core
         void OnValidate()
         {
             if (gameObject.activeInHierarchy)
-                ID.Value = this.GetPrefabID();
+                ID.Value = gameObject.GetPrefabID();
         }
 #endif
     }
