@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Core
 {
-    class PrefabReferenceBaker : MonoBehaviour
+    class PrefabReferenceBaker : ResourceLoader
     {
         [SerializeField] PrefabBaker[] Prefabs;
 
@@ -24,6 +24,10 @@ namespace Core
                         });
             }
         }
+
+#if UNITY_EDITOR
+        protected override void LoadResources() => Load<PrefabBaker>(ref Prefabs);
+#endif
     }
 
     public struct Prefab : IKeyBuffer
