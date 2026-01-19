@@ -3,6 +3,13 @@ using Unity.Entities;
 namespace Core
 {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateBefore(typeof(SpawnSystemGroup))]
+    public partial class InputSystemGroup : ComponentSystemGroup
+    {
+
+    }
+
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class SpawnSystemGroup : ComponentSystemGroup
     {
 
