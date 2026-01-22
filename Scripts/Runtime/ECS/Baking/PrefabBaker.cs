@@ -25,7 +25,6 @@ namespace Core
 #if UNITY_EDITOR
         void OnValidate()
         {
-            //if (gameObject.activeInHierarchy)
             ID.Value = gameObject.GetPrefabID();
         }
 #endif
