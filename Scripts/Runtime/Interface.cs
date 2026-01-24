@@ -24,7 +24,7 @@ namespace Core
         public string _DataFile { get; }
         public string _ResourcesPath { get; }
         public string _PersistentPath { get; }
-        public string _Dir { get; }
+        public string _Dir => $"{Application.persistentDataPath}/{_PersistentPath}";
 
         public string Collect(string name, string type = null)
         {
