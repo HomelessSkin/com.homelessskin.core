@@ -14,9 +14,9 @@ namespace Core
 
         public static bool Read(out Message message) => Q.TryDequeue(out message);
 
-        public static void Info(string agent, string message, float time = 1f)
+        public static void Info(object agent, string message, float time = 1f)
         {
-            var text = $"[<color=#{InfoColor}>{agent}</color>] <color=#{InfoColor}>{message}</color>";
+            var text = $"[<color=#{InfoColor}>{agent.GetType().FullName}</color>] <color=#{InfoColor}>{message}</color>";
 
             Q.Enqueue(new Message
             {
@@ -27,9 +27,9 @@ namespace Core
 
             Debug.Log(text);
         }
-        public static void Warning(string agent, string message, float time = 3f)
+        public static void Warning(object agent, string message, float time = 3f)
         {
-            var text = $"[<color=#{WarningColor}>{agent}</color>] <color=#{InfoColor}>{message}</color>";
+            var text = $"[<color=#{WarningColor}>{agent.GetType().FullName}</color>] <color=#{InfoColor}>{message}</color>";
 
             Q.Enqueue(new Message
             {
@@ -40,13 +40,13 @@ namespace Core
 
             Debug.Log(text);
         }
-        public static void Error(string agent, string message, float time = 10f)
+        public static void Error(object agent, string message, float time = 10f)
         {
             var text = $"[<color=#{ErrorColor}>{agent}</color>] <color=#{InfoColor}>{message}</color>";
 
             Q.Enqueue(new Message
             {
-                Text = $"[<color=#{ErrorColor}>{agent}</color>] <color=#{InfoColor}>{message}</color>",
+                Text = $"[<color=#{ErrorColor}>{agent.GetType().FullName}</color>] <color=#{InfoColor}>{message}</color>",
                 Time = time,
                 CallTime = Time.time
             });
