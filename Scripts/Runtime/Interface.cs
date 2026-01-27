@@ -20,18 +20,14 @@ namespace Core
     #region STORAGE
     public interface IStorage
     {
-        public int _MaxSaveFiles { get; }
-        public string _DataFile { get; }
-        public string _ResourcesPath { get; }
-        public string _PersistentPath { get; }
-        public string _Dir => $"{Application.persistentDataPath}/{_PersistentPath}";
+        public Settings _Settings { get; }
 
         public string Collect(string name, string type = null)
         {
-            var path = $"{_Dir}";
+            var path = $"{_Settings.Dir}";
             if (!string.IsNullOrEmpty(type))
                 path += $"{type}/";
-            path += $"{name}{_DataFile.Replace("*", "")}";
+            path += $"{name}{_Settings.DataFile.Replace("*", "")}";
 
             if (File.Exists(path))
                 return File.ReadAllText(path);
@@ -40,10 +36,10 @@ namespace Core
         }
         public async Task<string> CollectAsync(string name, string type = null)
         {
-            var path = $"{_Dir}";
+            var path = $"{_Settings.Dir}";
             if (!string.IsNullOrEmpty(type))
                 path += $"{type}/";
-            path += $"{name}{_DataFile.Replace("*", "")}";
+            path += $"{name}{_Settings.DataFile.Replace("*", "")}";
 
             if (File.Exists(path))
                 return await File.ReadAllTextAsync(path);
@@ -52,17 +48,27 @@ namespace Core
         }
         public virtual void Store(Data data)
         {
-            if (!Directory.Exists($"{_Dir}/{data.Type}"))
-                Directory.CreateDirectory($"{_Dir}/{data.Type}");
+            if (!Directory.Exists($"{_Settings.Dir}/{data.Type}"))
+                Directory.CreateDirectory($"{_Settings.Dir}/{data.Type}");
 
-            File.WriteAllText($"{_Dir}/{data.Type}/{data.Name}{_DataFile.Replace("*", "")}", data.Serialize());
+            File.WriteAllText($"{_Settings.Dir}/{data.Type}/{data.Name}{_Settings.DataFile.Replace("*", "")}", data.Serialize());
         }
         public async virtual Task StoreAsync(Data data)
         {
-            if (!Directory.Exists($"{_Dir}/{data.Type}"))
-                Directory.CreateDirectory($"{_Dir}/{data.Type}");
+            if (!Directory.Exists($"{_Settings.Dir}/{data.Type}"))
+                Directory.CreateDirectory($"{_Settings.Dir}/{data.Type}");
 
-            await File.WriteAllTextAsync($"{_Dir}/{data.Type}/{data.Name}{_DataFile.Replace("*", "")}", data.Serialize());
+            await File.WriteAllTextAsync($"{_Settings.Dir}/{data.Type}/{data.Name}{_Settings.DataFile.Replace("*", "")}", data.Serialize());
+        }
+
+        [Serializable]
+        public class Settings
+        {
+            public int MaxSaveFiles = 1;
+            public string DataFile = "*.json";
+            public string ResourcesPath;
+            public string PersistentPath;
+            public string Dir => $"{Application.persistentDataPath}/{PersistentPath}";
         }
 
         [Serializable]

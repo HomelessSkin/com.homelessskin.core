@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-using TMPro;
-
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -28,6 +26,7 @@ using Random = Unity.Mathematics.Random;
 
 namespace Core
 {
+    #region LISTS
     public static class Lists
     {
         public static void AddIndex(int index, ref NativeList<int> list)
@@ -190,6 +189,7 @@ namespace Core
             return list;
         }
     }
+    #endregion
 
     #region BEZIER
     public static class Bezier
@@ -418,6 +418,7 @@ namespace Core
     }
     #endregion
 
+    #region DATA UTIL
     public static class DataUtil
     {
         public static Texture2D ResizeBilinear(Texture2D source, int newWidth, int newHeight)
@@ -1007,6 +1008,7 @@ namespace Core
         };
         #endregion
     }
+    #endregion
 
     #region ELBO LOCAL TRANSFORM
     [System.Serializable]
@@ -1132,39 +1134,6 @@ namespace Core
     }
     #endregion
 
-    public enum Operation : byte
-    {
-        Null = 0,
-        Add = 1,
-        Subtract = 2,
-        Multiply = 3,
-        Divide = 4,
-
-    }
-    public enum BlockFace : byte
-    {
-        Top = 0,
-        Front = 1,
-        Right = 2,
-        Back = 3,
-        Left = 4,
-        Bot = 5
-    }
-    public enum EntityParameter : int
-    {
-        Null = 0,
-        Damage = 1,
-        PhysResistance = 2,
-        Regeneration = 3,
-        ColdResistance = 4,
-        Health = 5,
-        Charisma = 6,
-
-        LocalToWorldVelocityLinear = 100,
-        LocalVelocityAngular = 101
-
-    }
-
     #region KEY SCRIPTABLE
     public abstract class KeyScriptable : ScriptableObject
     {
@@ -1222,119 +1191,36 @@ namespace Core
     }
     #endregion
 
-    #region STREAMING SPRITES
-    [Serializable]
-    public class StreamingSprites
+    public enum Operation : byte
     {
-        public TMP_SpriteAsset Asset;
+        Null = 0,
+        Add = 1,
+        Subtract = 2,
+        Multiply = 3,
+        Divide = 4,
 
-        public int SpriteDensity;
-        public Texture2D Texture;
-        public Texture2D[] DefaultSprites;
-
-        bool[] TextureMap;
-        List<int> ReservedKeys = new List<int>();
-        Dictionary<int, (int, List<GameObject>)> HashSprite = new Dictionary<int, (int, List<GameObject>)>();
-
-        public int WidthSprites => Texture.width / SpriteDensity;
-        public int HeightSprites => Texture.height / SpriteDensity;
-
-        public void Prepare()
-        {
-            TextureMap = new bool[SpriteDensity * SpriteDensity];
-
-            for (int d = 0; d < DefaultSprites.Length; d++)
-                Draw(DefaultSprites[d], d, d);
-        }
-        public void ReserveKey(int key) => ReservedKeys.Add(key);
-        public void Draw(Texture2D smile, int hash, int id = -1)
-        {
-            if (IsKeyReserved(hash))
-                UnreserveKey(hash);
-
-            if (id < 0)
-            {
-                var got = false;
-                for (int t = DefaultSprites.Length; t < TextureMap.Length; t++)
-                    if (!TextureMap[t])
-                    {
-                        got = TextureMap[t] = true;
-                        id = t;
-
-                        break;
-                    }
-
-                if (!got)
-                    id = UnityEngine.Random.Range(DefaultSprites.Length, SpriteDensity * SpriteDensity);
-            }
-
-            HashSprite[hash] = (id, new List<GameObject>());
-
-            smile = DataUtil.ResizeBilinear(smile, WidthSprites, HeightSprites);
-            var x = WidthSprites * (id % SpriteDensity);
-            var y = Texture.height - HeightSprites * (id / SpriteDensity + 1);
-
-            var pixels = smile.GetPixels32();
-            for (int p = 0; p < pixels.Length; p++)
-            {
-                var pixel = pixels[p];
-                if (pixel.r < 10 &&
-                     pixel.g < 10 &&
-                     pixel.b < 10)
-                {
-                    pixel.r = pixel.g = pixel.b = 10;
-                    pixels[p] = pixel;
-                }
-            }
-
-            Texture.SetPixels32(x, y, WidthSprites, HeightSprites, pixels);
-            Texture.Apply();
-            Asset.UpdateLookupTables();
-        }
-        public void RemoveRange(List<int> toRemove, GameObject holder)
-        {
-            for (int s = 0; s < toRemove.Count; s++)
-            {
-                var key = toRemove[s];
-                if (IsNonDefKey(key))
-                {
-                    var smile = HashSprite[key];
-                    if (smile.Item2.Contains(holder))
-                    {
-                        smile.Item2.Remove(holder);
-
-                        if (smile.Item2.Count == 0)
-                        {
-                            TextureMap[smile.Item1] = false;
-
-                            HashSprite.Remove(key);
-                        }
-                        else
-                            HashSprite[key] = smile;
-                    }
-                }
-            }
-        }
-        public int GetSpriteID(int key, GameObject requester = null)
-        {
-            var smile = HashSprite[key];
-
-            if (IsNonDefKey(key) &&
-                 requester &&
-                !smile.Item2.Contains(requester))
-            {
-                smile.Item2.Add(requester);
-
-                HashSprite[key] = smile;
-            }
-
-            return smile.Item1;
-        }
-        public bool HasSprite(int hash) => HashSprite.ContainsKey(hash);
-        public bool IsKeyReserved(int key) => ReservedKeys.Contains(key);
-
-        bool IsNonDefKey(int key) => key < 0 || key >= DefaultSprites.Length;
-        void UnreserveKey(int key) => ReservedKeys.Remove(key);
     }
-    #endregion
+    public enum BlockFace : byte
+    {
+        Top = 0,
+        Front = 1,
+        Right = 2,
+        Back = 3,
+        Left = 4,
+        Bot = 5
+    }
+    public enum EntityParameter : int
+    {
+        Null = 0,
+        Damage = 1,
+        PhysResistance = 2,
+        Regeneration = 3,
+        ColdResistance = 4,
+        Health = 5,
+        Charisma = 6,
+
+        LocalToWorldVelocityLinear = 100,
+        LocalVelocityAngular = 101
+
+    }
 }
