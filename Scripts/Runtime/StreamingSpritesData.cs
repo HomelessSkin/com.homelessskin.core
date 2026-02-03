@@ -21,15 +21,17 @@ namespace Core
 
     public static class StreamingSprites
     {
+        public static string Asset => Data.Asset.name;
         static StreamingSpritesData Data;
 
         static float[] TextureMap;
-        static Dictionary<int, (int, int)> HashIndex = new Dictionary<int, (int, int)>();
+        static Dictionary<int, (int, int)> HashIndex;
 
         public static void Prepare(StreamingSpritesData data)
         {
             Data = data;
             TextureMap = new float[Data.SpriteDensity * Data.SpriteDensity];
+            HashIndex = new Dictionary<int, (int, int)>();
 
             for (int d = 0; d < Data.DefaultSprites.Length; d++)
                 Draw(Data.DefaultSprites[d], d);
