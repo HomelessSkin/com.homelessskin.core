@@ -41,9 +41,10 @@ namespace Core
             for (int s = 0; s < toRemove.Count; s++)
             {
                 var key = toRemove[s];
-                var smile = HashIndex[key];
-                smile.Item2--;
+                if (!HashIndex.TryGetValue(key, out var smile))
+                    continue;
 
+                smile.Item2--;
                 if (smile.Item2 == 0)
                 {
                     TextureMap[smile.Item1] = 0f;
@@ -54,7 +55,7 @@ namespace Core
                     HashIndex[key] = smile;
             }
         }
-        public static int GetSpriteIndex(int hash, string uri)
+        public static int GetSpriteIndex(int hash, string url)
         {
             if (HashIndex.TryGetValue(hash, out var i))
             {
@@ -67,7 +68,7 @@ namespace Core
             var n = GetFreeOrEarlier();
             HashIndex[hash] = (n, 1);
 
-            Draw(uri, n);
+            Draw(url, n);
 
             return n;
         }
