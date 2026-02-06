@@ -6,19 +6,7 @@ using UnityEngine;
 
 namespace Core
 {
-    [CreateAssetMenu(fileName = "StreamingSpritesData", menuName = "Core/Streaming Sprites Data")]
-    public class StreamingSpritesData : ScriptableObject
-    {
-        public TMP_SpriteAsset Asset;
-
-        public int SpriteDensity;
-        public Texture2D Texture;
-        public Texture2D[] DefaultSprites;
-
-        public int WidthSprites => Texture.width / SpriteDensity;
-        public int HeightSprites => Texture.height / SpriteDensity;
-    }
-
+    #region STREAMING SPRITES
     public static class StreamingSprites
     {
         public static string Asset => Data.Asset.name;
@@ -129,4 +117,20 @@ namespace Core
             return earlier;
         }
     }
+    #endregion
+
+    #region STREAMING SPRITES DATA
+    [CreateAssetMenu(fileName = "StreamingSpritesData", menuName = "Core/Streaming Sprites Data")]
+    public class StreamingSpritesData : ScriptableObject
+    {
+        public TMP_SpriteAsset Asset;
+
+        public int SpriteDensity;
+        public Texture2D Texture;
+        public Texture2D[] DefaultSprites;
+
+        public int WidthSprites => Texture.width / SpriteDensity;
+        public int HeightSprites => Texture.height / SpriteDensity;
+    }
+    #endregion
 }
