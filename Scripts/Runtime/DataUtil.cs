@@ -1147,6 +1147,11 @@ namespace Core
         {
             ID = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
+            Save();
+        }
+
+        protected void Save()
+        {
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
