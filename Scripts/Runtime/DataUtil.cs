@@ -1124,16 +1124,6 @@ namespace Core
     }
     #endregion
 
-    #region BATCH
-    public class Batch
-    {
-        public int Count;
-        public int PropertyIndex;
-
-        public List<Matrix4x4> Value;
-    }
-    #endregion
-
     #region KEY SCRIPTABLE
     public abstract class KeyScriptable : ScriptableObject
     {
