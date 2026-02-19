@@ -1215,7 +1215,7 @@ namespace Core
         Charisma = 6,
 
         LocalToWorldVelocityLinear = 100,
-        LocalVelocityAngular = 101
+        LocalVelocityAngular = 101,
 
     }
 }
