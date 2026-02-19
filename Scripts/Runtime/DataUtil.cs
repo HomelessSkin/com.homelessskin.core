@@ -1193,6 +1193,7 @@ namespace Core
         Subtract = 2,
         Multiply = 3,
         Divide = 4,
+        Shift = 5,
 
     }
     public enum BlockFace : byte
@@ -1203,19 +1204,5 @@ namespace Core
         Back = 3,
         Left = 4,
         Bot = 5
-    }
-    public enum EntityParameter : int
-    {
-        Null = 0,
-        Damage = 1,
-        PhysResistance = 2,
-        Regeneration = 3,
-        ColdResistance = 4,
-        Health = 5,
-        Charisma = 6,
-
-        LocalToWorldVelocityLinear = 100,
-        LocalVelocityAngular = 101,
-
     }
 }
