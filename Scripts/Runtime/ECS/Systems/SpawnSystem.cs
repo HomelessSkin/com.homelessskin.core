@@ -82,6 +82,14 @@ namespace Core
         public float3 Position;
         public quaternion Rotation;
 
+        public SpawnRequest(int prefabID, int uniqueID)
+        {
+            OperationID = uniqueID;
+            PrefabID = prefabID;
+
+            Position = 0f;
+            Rotation = quaternion.identity;
+        }
         public SpawnRequest(int prefabID, int uniqueID, float3 position, quaternion rotation)
         {
             OperationID = uniqueID + position.GetHashCode() + rotation.GetHashCode();
