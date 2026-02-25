@@ -353,21 +353,7 @@ namespace Core
     }
     #endregion
 
-    [BurstCompile]
-    struct GetBufferElementJob<T> : IJobParallelFor where T : unmanaged, IKeyBuffer
-    {
-        [ReadOnly] public int ID;
-        [ReadOnly] public DynamicBuffer<T> Buffer;
-
-        [NativeDisableParallelForRestriction] public NativeArray<int> Result;
-
-        public void Execute(int index)
-        {
-            if (Buffer[index].GetID() == ID)
-                Result[0] = index;
-        }
-    }
-
+    #region BEHAVIOUR SYSTEM
     public abstract partial class BehaviourSystem : SystemBase
     {
         protected override void OnUpdate()
@@ -378,7 +364,9 @@ namespace Core
         protected abstract void GetRef();
         protected abstract void Proceed();
     }
+    #endregion
 
+    #region RELOAD MANAGED SINGLETON SYSTEM
     public abstract partial class ReloadManagedSingletoneSystem<T> : BehaviourSystem
         where T : IComponentData, new()
     {
@@ -410,6 +398,24 @@ namespace Core
             }
         }
     }
+    #endregion
+
+    #region GET BUFFER ELEMENT JOB
+    [BurstCompile]
+    struct GetBufferElementJob<T> : IJobParallelFor where T : unmanaged, IKeyBuffer
+    {
+        [ReadOnly] public int ID;
+        [ReadOnly] public DynamicBuffer<T> Buffer;
+
+        [NativeDisableParallelForRestriction] public NativeArray<int> Result;
+
+        public void Execute(int index)
+        {
+            if (Buffer[index].GetID() == ID)
+                Result[0] = index;
+        }
+    }
+    #endregion
 
     public enum LogLevel : byte
     {
