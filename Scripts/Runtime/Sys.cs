@@ -366,8 +366,8 @@ namespace Core
     }
     #endregion
 
-    #region RELOAD UNMANAGED SINGLETON SYSTEM
-    public abstract partial class ReloadUnManagedSingletoneSystem<T> : BehaviourSystem
+    #region UNMANAGED SINGLETON SYSTEM
+    public abstract partial class UnmanagedSingletonSystem<T> : BehaviourSystem
         where T : unmanaged, IComponentData
     {
         protected T Value;
@@ -382,8 +382,8 @@ namespace Core
     }
     #endregion
 
-    #region RELOAD MANAGED SINGLETON SYSTEM
-    public abstract partial class ReloadManagedSingletoneSystem<T> : BehaviourSystem
+    #region MANAGED SINGLETON SYSTEM
+    public abstract partial class ManagedSingletonSystem<T> : BehaviourSystem
         where T : IComponentData, new()
     {
         protected T Value;
