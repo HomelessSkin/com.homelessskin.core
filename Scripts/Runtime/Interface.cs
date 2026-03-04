@@ -9,6 +9,14 @@ using UnityEngine;
 
 namespace Core
 {
+    #region CUSTOMIZABLE
+    public interface ICustomizable<T>
+    {
+        public bool IsActive { get; }
+        public T TypeSettings { get; }
+    }
+    #endregion
+
     #region KEY BUFFER
     public interface IKeyBuffer : IBufferElementData
     {
