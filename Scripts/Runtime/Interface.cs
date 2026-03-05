@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Core
 {
     #region CUSTOMIZABLE
-    public interface ICustomizable<T>
+    public interface IGroupSystem<T> where T : ScriptableSettings
     {
         public bool IsActive { get; }
         public T TypeSettings { get; }
