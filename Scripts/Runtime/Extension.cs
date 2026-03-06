@@ -1,9 +1,13 @@
+using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace Core
 {
     public static class Extension
     {
+        public static bool IsEmpty<T>(this List<T> list) => list.Count == 0;
+
         public static void SavePrefInt(this IPrefKey key, int value)
         {
             PlayerPrefs.SetInt(key._Key, value);
