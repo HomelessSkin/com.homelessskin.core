@@ -1,11 +1,11 @@
 {
   "name": "com.homelessskin.core",
   "displayName": "Core",
-  "version": "1.0.0",
-  "description": "core",
+  "version": "0.5.0",
+  "description": "Core Util Library.",
   "author": {
     "name": "RU_1n",
-    "email": "your@email.com"
+    "email": "hyhuxy9ce6e@gmail.com"
   },
   "keywords": [
     "core",
