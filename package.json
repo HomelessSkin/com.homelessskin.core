@@ -14,7 +14,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/homelessskin/shared-core.git"
+    "url": "https://github.com/HomelessSkin/com.homelessskin.core.git"
   },
   "hideInEditor": false,
   "dependencies": {
