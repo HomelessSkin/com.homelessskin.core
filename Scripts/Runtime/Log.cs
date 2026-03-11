@@ -58,7 +58,7 @@ namespace Core
         public static bool Read(out Message message)
         {
             if (Q.TryDequeue(out message))
-                OnRead.Invoke();
+                OnRead?.Invoke();
 
             return message != null;
         }
