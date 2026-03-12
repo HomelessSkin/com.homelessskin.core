@@ -6,6 +6,25 @@ namespace Core
 {
     public static class Extension
     {
+        public static Color HexToRGB(this string hex, byte Alpha = 255)
+        {
+            if (string.IsNullOrEmpty(hex))
+                return Color.white;
+
+            hex = hex.Replace("#", "");
+
+            if (int.TryParse(hex, out var decimalHexColor))
+            {
+                var R = (byte)((decimalHexColor >> 16) & byte.MaxValue);
+                var G = (byte)((decimalHexColor >> 8) & byte.MaxValue);
+                var B = (byte)(decimalHexColor & byte.MaxValue);
+
+                return new Color(R, G, B, Alpha);
+            }
+
+            return Color.white;
+        }
+
         public static bool IsEmpty<T>(this List<T> list) => list.Count == 0;
 
         public static void SavePrefInt(this IPrefKey key, int value)
