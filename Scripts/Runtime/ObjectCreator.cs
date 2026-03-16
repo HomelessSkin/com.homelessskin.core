@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using Unity.Scenes;
 
+using UnityEditor;
 using UnityEditor.SceneManagement;
 
 using UnityEngine;
@@ -12,6 +13,8 @@ namespace Core
 {
     public class ObjectCreator : MonoBehaviour
     {
+        [SerializeField] int GridHorizontalBorder = 3;
+        [SerializeField] int GridVerticalBorder = 3;
         [SerializeField] Poisson Poisson;
         [SerializeField] SubScene Scene;
         [SerializeField] int ParentIndex;
@@ -20,7 +23,33 @@ namespace Core
         [SerializeField] Bounds[] Obstacles;
 
         public void SetSeed(uint seed) => Poisson.Seed = seed;
-        public void Create()
+        public void CreateGridus()
+        {
+            var parent = Scene.EditingScene.GetRootGameObjects()[ParentIndex].transform;
+
+            var cx = Poisson.GridWidth / Poisson.CellWidth + GridHorizontalBorder;
+            var cz = Poisson.GridHeight / Poisson.CellWidth + GridVerticalBorder;
+            var half = Poisson.CellWidth / 2f;
+            var settings = new ConvertToPrefabInstanceSettings
+            {
+
+            };
+
+            for (int x = -GridHorizontalBorder; x < cx; x++)
+                for (int z = -GridVerticalBorder; z < cz; z++)
+                {
+                    var newGO = Instantiate(Prefab);
+
+                    SceneManager.MoveGameObjectToScene(newGO, Scene.EditingScene);
+                    PrefabUtility.ConvertToPrefabInstance(newGO, Prefab, settings, InteractionMode.AutomatedAction);
+
+                    newGO.transform.SetParent(parent, false);
+                    newGO.transform.localPosition = new Vector3(Poisson.CellWidth * x + half, 0f, Poisson.CellWidth * z + half);
+                }
+
+            EditorSceneManager.MarkSceneDirty(Scene.EditingScene);
+        }
+        public void CreatePoissonus()
         {
             var parent = Scene.EditingScene.GetRootGameObjects()[ParentIndex].transform;
 
@@ -31,7 +60,9 @@ namespace Core
                 if (length(pos) > 0f)
                 {
                     var newGO = Instantiate(Prefab);
+
                     SceneManager.MoveGameObjectToScene(newGO, Scene.EditingScene);
+
                     newGO.transform.SetParent(parent, false);
                     newGO.transform.localPosition = pos;
                 }

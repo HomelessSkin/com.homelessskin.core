@@ -350,6 +350,13 @@ namespace Core
 
             return result;
         }
+
+        public static void Off<T>() where T : ISystem
+        {
+            var systemHandle = World.DefaultGameObjectInjectionWorld.GetExistingSystem(typeof(T));
+            ref var systemState = ref World.DefaultGameObjectInjectionWorld.Unmanaged.ResolveSystemStateRef(systemHandle);
+            systemState.Enabled = false;
+        }
     }
     #endregion
 

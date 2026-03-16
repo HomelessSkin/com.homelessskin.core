@@ -25,8 +25,11 @@ namespace Core
                 AssetDatabase.Refresh();
             }
 
-            if (GUILayout.Button("Create"))
-                creator.Create();
+            if (GUILayout.Button("Create Gridus"))
+                creator.CreateGridus();
+
+            if (GUILayout.Button("Create Poissonus"))
+                creator.CreatePoissonus();
 
             if (GUILayout.Button("Destroy"))
                 creator.DestroyChildren();
