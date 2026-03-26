@@ -194,6 +194,22 @@ namespace Core
     #region BEZIER
     public static class Bezier
     {
+        public static float3 Sample(float t, float3 A, float3 B, float3 C)
+        {
+            var a = lerp(A, B, t);
+            var b = lerp(B, C, t);
+
+            return lerp(a, b, t);
+        }
+        public static float3 Sample(float t, float3 A, float3 B, float3 C, out float3 forward)
+        {
+            var a = lerp(A, B, t);
+            var b = lerp(B, C, t);
+
+            forward = normalize(b - a);
+
+            return lerp(a, b, t);
+        }
         public static NativeList<int> GetCurve(NativeList<float3> points, int width, float step)
         {
             var list = new NativeList<int>(Allocator.Persistent);

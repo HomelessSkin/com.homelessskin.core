@@ -363,6 +363,8 @@ namespace Core
     #region BEHAVIOUR SYSTEM
     public abstract partial class BehaviourSystem : SystemBase
     {
+        protected string Group;
+
         protected override void OnUpdate()
         {
             GetRef();
