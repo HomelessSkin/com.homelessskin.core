@@ -15,6 +15,8 @@ namespace Core
     {
         [SerializeField] int GridHorizontalBorder = 3;
         [SerializeField] int GridVerticalBorder = 3;
+        [SerializeField] int GridHorizontalOffset = 0;
+        [SerializeField] int GridVerticalOffset = 0;
         [SerializeField] Poisson Poisson;
         [SerializeField] SubScene Scene;
         [SerializeField] int ParentIndex;
@@ -44,7 +46,12 @@ namespace Core
                     PrefabUtility.ConvertToPrefabInstance(newGO, Prefab, settings, InteractionMode.AutomatedAction);
 
                     newGO.transform.SetParent(parent, false);
-                    newGO.transform.localPosition = new Vector3(Poisson.CellWidth * x + half, 0f, Poisson.CellWidth * z + half);
+                    newGO.transform.localPosition =
+                        new Vector3(
+                        Poisson.CellWidth * x + half + x * GridHorizontalOffset,
+                        0f,
+                        Poisson.CellWidth * z + half + z * GridVerticalOffset
+                        );
                 }
 
             EditorSceneManager.MarkSceneDirty(Scene.EditingScene);
