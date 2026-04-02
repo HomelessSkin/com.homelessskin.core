@@ -1,8 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 using Unity.Burst;
 using Unity.Collections;
@@ -17,7 +17,6 @@ using UnityEditor;
 
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.UI;
 
 using static Unity.Mathematics.math;
 using static Unity.Mathematics.noise;
@@ -755,22 +754,19 @@ namespace Core
 
             return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f));
         }
-        public static IEnumerator LoadTexture(string url, Image image)
+        public static async Task<Texture2D> LoadTexture(string url)
         {
-            using (var webRequest = UnityWebRequestTexture.GetTexture(url))
+            using (var request = UnityWebRequestTexture.GetTexture(url))
             {
-                yield return webRequest.SendWebRequest();
+                await request.SendWebRequest();
 
-                if (webRequest.result != UnityWebRequest.Result.Success)
-                    Debug.LogError("Image Load Error: " + webRequest.error);
+                if (request.result == UnityWebRequest.Result.Success)
+                    return DownloadHandlerTexture.GetContent(request);
                 else
-                {
-                    Debug.Log("Setting Image");
-
-                    var texture = DownloadHandlerTexture.GetContent(webRequest);
-                    image.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-                }
+                    Log.Error(request, request.error);
             }
+
+            return null;
         }
         public static Mesh CalculateSelectedMesh(Vector3[] corners, Mesh sample, Mesh mesh = null)
         {

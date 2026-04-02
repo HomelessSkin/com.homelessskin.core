@@ -13,13 +13,13 @@ namespace Core
             public override void Bake(PrefabReferenceBaker authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.None);
-                AddBuffer<Prefab>(entity);
+                AddBuffer<Source>(entity);
 
                 if (authoring.Prefabs != null)
                     for (int p = 0; p < authoring.Prefabs.Length; p++)
-                        AppendToBuffer(entity, new Prefab
+                        AppendToBuffer(entity, new Source
                         {
-                            ID = authoring.Prefabs[p].GetID(),
+                            ID = authoring.Prefabs[p].gameObject.GetPrefabID(),
                             Value = GetEntity(authoring.Prefabs[p], TransformUsageFlags.Dynamic),
                         });
             }
@@ -30,7 +30,7 @@ namespace Core
 #endif
     }
 
-    public struct Prefab : IKeyBuffer
+    public struct Source : IKeyBuffer
     {
         public int ID;
         public Entity Value;

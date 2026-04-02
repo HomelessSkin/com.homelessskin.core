@@ -1,3 +1,5 @@
+using System;
+
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -13,57 +15,53 @@ namespace Core
     [UpdateInGroup(typeof(SpawnSystemGroup), OrderFirst = true)]
     public partial struct SpawnSystem : ISystem
     {
-        ComponentLookup<SpawnRequest> RequestLookup;
-
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<Core.Prefab>();
+            state.RequireForUpdate<Source>();
             state.RequireForUpdate<SpawnRequest>();
-
-            RequestLookup = GetComponentLookup<SpawnRequest>();
         }
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            RequestLookup.Update(ref state);
-
             var ecb = Sys.ECB(state.WorldUpdateAllocator);
-            var query = QueryBuilder()
-                .WithAll<SpawnRequest>()
-                .Build()
-                .ToEntityArray(Allocator.TempJob);
+
+            var query = QueryBuilder().WithAll<SpawnRequest>().Build();
+            var entities = query.ToEntityArray(Allocator.TempJob);
+            var requests = query.ToComponentDataArray<SpawnRequest>(Allocator.TempJob);
 
             new SpawnJob
             {
-                Entities = query,
-                Prefabs = GetSingletonBuffer<Core.Prefab>(),
+                Entities = entities,
+                Requests = requests,
 
-                RequestLookup = RequestLookup,
+                Prefabs = GetSingletonBuffer<Core.Source>(),
 
                 ECB = ecb.AsParallelWriter()
             }
-            .Schedule(query.Length, query.Length / JobsUtility.JobWorkerCount, state.Dependency)
+            .Schedule(entities.Length, entities.Length / JobsUtility.JobWorkerCount, state.Dependency)
             .Complete();
 
             ecb.Playback(state.EntityManager);
-            query.Dispose();
+
+            entities.Dispose();
+            requests.Dispose();
         }
 
         [BurstCompile]
         partial struct SpawnJob : IJobParallelFor
         {
             [ReadOnly] public NativeArray<Entity> Entities;
-            [ReadOnly] public DynamicBuffer<Core.Prefab> Prefabs;
+            [ReadOnly] public DynamicBuffer<Source> Prefabs;
 
-            [ReadOnly] public ComponentLookup<SpawnRequest> RequestLookup;
+            [ReadOnly] public NativeArray<SpawnRequest> Requests;
 
             public EntityCommandBuffer.ParallelWriter ECB;
 
             public void Execute(int index)
             {
                 var entity = Entities[index];
-                var request = RequestLookup[entity];
+                var request = Requests[index];
 
                 var instance = Sys.InstantiateAt(Sys.GetBufferElement(request.PrefabID, Prefabs).Value,
                        LocalTransform.FromPositionRotation(request.Position, request.Rotation),
@@ -75,6 +73,7 @@ namespace Core
         }
     }
 
+    [Serializable]
     public struct SpawnRequest : IComponentData
     {
         public long OperationID;
