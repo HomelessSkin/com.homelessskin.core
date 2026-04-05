@@ -8,6 +8,8 @@ using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+using UnityEngine;
+
 using static Unity.Entities.SystemAPI;
 
 namespace Core
@@ -96,6 +98,22 @@ namespace Core
 
             Position = position;
             Rotation = rotation;
+        }
+        public SpawnRequest(int prefabID, int uniqueID, Transform transform)
+        {
+            OperationID = uniqueID + transform.position.GetHashCode() + transform.rotation.GetHashCode();
+            PrefabID = prefabID;
+
+            Position = transform.position;
+            Rotation = transform.rotation;
+        }
+        public SpawnRequest(int prefabID, int uniqueID, Transform transform, Vector3 offset)
+        {
+            OperationID = uniqueID + (transform.position + offset).GetHashCode() + transform.rotation.GetHashCode();
+            PrefabID = prefabID;
+
+            Position = transform.position + offset;
+            Rotation = transform.rotation;
         }
     }
 
