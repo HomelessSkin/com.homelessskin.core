@@ -99,6 +99,22 @@ namespace Core
             Position = position;
             Rotation = rotation;
         }
+        public SpawnRequest(int prefabID, int uniqueID, LocalTransform transform)
+        {
+            OperationID = uniqueID + transform.Position.GetHashCode() + transform.Rotation.GetHashCode();
+            PrefabID = prefabID;
+
+            Position = transform.Position;
+            Rotation = transform.Rotation;
+        }
+        public SpawnRequest(int prefabID, int uniqueID, LocalTransform transform, float3 offset)
+        {
+            OperationID = uniqueID + (transform.Position + offset).GetHashCode() + transform.Rotation.GetHashCode();
+            PrefabID = prefabID;
+
+            Position = transform.Position + offset;
+            Rotation = transform.Rotation;
+        }
         public SpawnRequest(int prefabID, int uniqueID, Transform transform)
         {
             OperationID = uniqueID + transform.position.GetHashCode() + transform.rotation.GetHashCode();
