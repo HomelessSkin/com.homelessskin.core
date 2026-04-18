@@ -1141,6 +1141,16 @@ namespace Core
     {
         public int ID;
         public int GetID() => ID;
+        public static FixedList128Bytes<int> GetIDs<T>(T[] scriptables) where T : KeyScriptable
+        {
+            var list = new FixedList128Bytes<int>();
+
+            if (scriptables != null)
+                for (int s = 0; s < scriptables.Length && s < 31; s++)
+                    list.Add(scriptables[s].ID);
+
+            return list;
+        }
 
 #if UNITY_EDITOR
         protected virtual void Reset() => RandomizeID();
@@ -1183,16 +1193,6 @@ namespace Core
             asset = AssetDatabase.LoadAssetAtPath<T>(FileUtil.GetProjectRelativePath(path));
 
             return asset;
-        }
-        public static FixedList128Bytes<int> GetIDs<T>(T[] scriptables) where T : KeyScriptable
-        {
-            var list = new FixedList128Bytes<int>();
-
-            if (scriptables != null)
-                for (int s = 0; s < scriptables.Length && s < 31; s++)
-                    list.Add(scriptables[s].ID);
-
-            return list;
         }
 #endif
     }
