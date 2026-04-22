@@ -9,10 +9,12 @@ namespace Core
     [DisallowMultipleComponent]
     public class PrefabBaker : MonoBehaviour
     {
+        [SerializeField] int SpawnChance;
         [SerializeField] float SpawnDelay;
         [SerializeField] PrefabID ID;
 
         public int GetID() => ID.Value;
+        public int GetSpawnChance() => SpawnChance;
         public float GetSpawnDelay() => SpawnDelay;
 
         class PrefabBakerBaker : Baker<PrefabBaker>
