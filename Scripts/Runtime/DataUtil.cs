@@ -1044,7 +1044,7 @@ namespace Core
 
     #region FRAME
     [Serializable]
-    public class Frame
+    public class SkeletonFrame
     {
         public float Length;
         public BoneTarget[] BoneTargets;

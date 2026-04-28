@@ -8,7 +8,7 @@ namespace Core
     {
 #if UNITY_EDITOR
         [SerializeField] bool AutoLoad;
-        [SerializeField] protected string[] ResourcesPaths;
+        [SerializeField] protected string[] ResourcePaths;
 
         protected virtual void OnValidate()
         {
@@ -22,7 +22,7 @@ namespace Core
 
         protected virtual void Load<T>(ref T[] value) where T : Object
         {
-            if (ResourcesPaths == null)
+            if (ResourcePaths == null)
                 return;
 
             var assets = new List<T>();
@@ -30,10 +30,10 @@ namespace Core
                 if (value[v])
                     assets.Add(value[v]);
 
-            for (int p = 0; p < ResourcesPaths.Length; p++)
-                if (!string.IsNullOrEmpty(ResourcesPaths[p]))
+            for (int p = 0; p < ResourcePaths.Length; p++)
+                if (!string.IsNullOrEmpty(ResourcePaths[p]))
                 {
-                    var loaded = Resources.LoadAll<T>(ResourcesPaths[p]);
+                    var loaded = Resources.LoadAll<T>(ResourcePaths[p]);
                     for (int l = 0; l < loaded.Length; l++)
                         if (!assets.Contains(loaded[l]))
                             assets.Add(loaded[l]);
