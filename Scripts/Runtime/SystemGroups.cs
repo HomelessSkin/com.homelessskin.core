@@ -27,6 +27,13 @@ namespace Core
 
     }
 
+    [UpdateInGroup(typeof(LateSimulationSystemGroup))]
+    [UpdateAfter(typeof(StateSystemGroup))]
+    public partial class MobSystemGroup : ComponentSystemGroup
+    {
+
+    }
+
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class RenderSystemGroup : ComponentSystemGroup
     {
