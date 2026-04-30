@@ -1,10 +1,8 @@
 using Unity.Entities;
 
-using UnityEngine;
-
 namespace Core
 {
-    class EnvironmentElementBaker : MonoBehaviour
+    class EnvironmentElementBaker : PrefabBaker
     {
 
 
@@ -13,6 +11,7 @@ namespace Core
             public override void Bake(EnvironmentElementBaker authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
+                AddComponent(entity, authoring.ID);
                 AddComponent<EnvironmentElementTag>(entity);
             }
         }
