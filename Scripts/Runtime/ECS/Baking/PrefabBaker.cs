@@ -12,12 +12,10 @@ namespace Core
     public class PrefabBaker : MonoBehaviour
     {
         //[SerializeField] int SpawnChance;
-        //[SerializeField] float SpawnDelay;
         [SerializeField] protected PrefabID ID;
 
         public int GetID() => ID.Value;
         //public int GetSpawnChance() => SpawnChance;
-        //public float GetSpawnDelay() => SpawnDelay;
 
         public long Spawn(int unique = 0) => Spawn(unique, Vector3.zero, Quaternion.identity);
         public long Spawn(int unique, Transform transform) => Spawn(unique, transform.position, transform.rotation);
