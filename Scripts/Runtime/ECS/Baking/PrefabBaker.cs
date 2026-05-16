@@ -38,6 +38,10 @@ namespace Core
         }
 
 #if UNITY_EDITOR
+        [Space]
+        [SerializeField] protected bool AddSpawn = false;
+        [SerializeField] protected long SpawnID = 0L;
+
         protected virtual void OnValidate()
         {
             ID.Value = gameObject.GetPrefabID();
