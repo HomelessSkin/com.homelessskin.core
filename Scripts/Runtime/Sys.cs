@@ -145,6 +145,22 @@ namespace Core
         /// ето сдвиг нахуй
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Add<T, U, F>(T req1, U req2, F req3, EntityManager manager)
+            where T : unmanaged, IComponentData
+            where U : unmanaged, IComponentData
+            where F : unmanaged, IComponentData
+        {
+            var entity = manager.CreateEntity();
+
+            manager.AddComponentData(entity, req1);
+            manager.AddComponentData(entity, req2);
+            manager.AddComponentData(entity, req3);
+        }
+
+        /// <summary>
+        /// ето сдвиг нахуй
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Add<T>(T request, EntityManager manager, out Entity entity) where T : unmanaged, IComponentData
         {
             entity = manager.CreateEntity();
