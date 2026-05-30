@@ -1207,6 +1207,7 @@ namespace Core
         Divide = 4,
         Shift = 5,
         Loop = 6,
+        Set = 7,
 
     }
     public enum BlockFace : byte
