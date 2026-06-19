@@ -1208,6 +1208,7 @@ namespace Core
         Shift = 5,
         Loop = 6,
         Set = 7,
+        Restoration = 8,
 
     }
     public enum BlockFace : byte
