@@ -395,11 +395,15 @@ namespace Core
     public abstract partial class UnmanagedSingletonSystem<T> : BehaviourSystem
         where T : unmanaged, IComponentData
     {
-        protected T Value;
+        protected RefRW<T> Value;
 
+        protected override void GetRef()
+        {
+
+        }
         protected override void OnUpdate()
         {
-            if (!SystemAPI.TryGetSingleton<T>(out Value))
+            if (!SystemAPI.TryGetSingletonRW<T>(out Value))
                 return;
 
             base.OnUpdate();
