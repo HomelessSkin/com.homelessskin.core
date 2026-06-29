@@ -9,6 +9,8 @@ using UnityEngine.SceneManagement;
 
 using static Unity.Mathematics.math;
 
+using Random = Unity.Mathematics.Random;
+
 namespace Core
 {
     public class ObjectCreator : MonoBehaviour
@@ -59,6 +61,12 @@ namespace Core
         public void CreatePoissonus()
         {
             var parent = Scene.EditingScene.GetRootGameObjects()[ParentIndex].transform;
+            var settings = new ConvertToPrefabInstanceSettings
+            {
+
+            };
+
+            Poisson.Seed = new Random(Poisson.Seed).NextUInt();
 
             var grid = Poisson.GetGrid_Job(Obstacles);
             for (int g = 0; g < grid.Length; g++)
@@ -69,6 +77,7 @@ namespace Core
                     var newGO = Instantiate(Prefab);
 
                     SceneManager.MoveGameObjectToScene(newGO, Scene.EditingScene);
+                    PrefabUtility.ConvertToPrefabInstance(newGO, Prefab, settings, InteractionMode.AutomatedAction);
 
                     newGO.transform.SetParent(parent, false);
                     newGO.transform.localPosition = pos;
