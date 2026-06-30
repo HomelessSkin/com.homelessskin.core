@@ -397,10 +397,6 @@ namespace Core
     {
         protected RefRW<T> Value;
 
-        protected override void GetRef()
-        {
-
-        }
         protected override void OnUpdate()
         {
             if (!SystemAPI.TryGetSingletonRW<T>(out Value))
