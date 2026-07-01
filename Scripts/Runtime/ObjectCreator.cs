@@ -1,4 +1,6 @@
 #if UNITY_EDITOR
+using Unity.Collections;
+using Unity.Mathematics;
 using Unity.Scenes;
 
 using UnityEditor;
@@ -23,8 +25,13 @@ namespace Core
         [SerializeField] SubScene Scene;
         [SerializeField] int ParentIndex;
         [SerializeField] GameObject Prefab;
+
         [Space]
         [SerializeField] Bounds[] Obstacles;
+
+        [Space]
+        [SerializeField] Mesh Preview;
+        [SerializeField] NativeArray<float3> Grid;
 
         public void SetSeed(uint seed) => Poisson.Seed = seed;
         public void CreateGridus()
@@ -49,29 +56,38 @@ namespace Core
 
                     newGO.transform.SetParent(parent, false);
                     newGO.transform.localPosition =
-                        new Vector3(
-                        Poisson.CellWidth * x + half + x * GridHorizontalOffset,
-                        0f,
-                        Poisson.CellWidth * z + half + z * GridVerticalOffset
+                        new Vector3
+                        (
+                            Poisson.CellWidth * x + half + x * GridHorizontalOffset,
+                            0f,
+                            Poisson.CellWidth * z + half + z * GridVerticalOffset
                         );
                 }
 
             EditorSceneManager.MarkSceneDirty(Scene.EditingScene);
         }
-        public void CreatePoissonus()
+        public void CalculatePoisson()
         {
+            Poisson.Seed = new Random(Poisson.Seed).NextUInt();
+
+            if (Grid.IsCreated)
+                Grid.Dispose();
+            Grid = Poisson.GetGrid_Job(Obstacles);
+        }
+        public void Spawn()
+        {
+            if (!Grid.IsCreated)
+                return;
+
             var parent = Scene.EditingScene.GetRootGameObjects()[ParentIndex].transform;
             var settings = new ConvertToPrefabInstanceSettings
             {
 
             };
 
-            Poisson.Seed = new Random(Poisson.Seed).NextUInt();
-
-            var grid = Poisson.GetGrid_Job(Obstacles);
-            for (int g = 0; g < grid.Length; g++)
+            for (int g = 0; g < Grid.Length; g++)
             {
-                var pos = grid[g];
+                var pos = Grid[g];
                 if (length(pos) > 0f)
                 {
                     var newGO = Instantiate(Prefab);
@@ -83,7 +99,8 @@ namespace Core
                     newGO.transform.localPosition = pos;
                 }
             }
-            grid.Dispose();
+
+            Grid.Dispose();
 
             EditorSceneManager.MarkSceneDirty(Scene.EditingScene);
         }
@@ -98,6 +115,31 @@ namespace Core
 
                 DestroyImmediate(children[c].gameObject);
             }
+        }
+
+        void OnDrawGizmos()
+        {
+            if (!Preview || !Grid.IsCreated)
+                return;
+
+            var a = 0;
+            for (int g = 0; g < Grid.Length; g++)
+            {
+                var pos = Grid[g];
+                if (length(pos) > 0f)
+                {
+                    a++;
+
+                    Gizmos.DrawWireMesh(Preview, 0, pos);
+                }
+            }
+
+            Handles.Label(transform.position, $"{a}");
+        }
+        void OnDestroy()
+        {
+            if (Grid.IsCreated)
+                Grid.Dispose();
         }
     }
 }

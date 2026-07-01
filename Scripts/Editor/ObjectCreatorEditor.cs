@@ -28,8 +28,11 @@ namespace Core
             if (GUILayout.Button("Create Gridus"))
                 creator.CreateGridus();
 
-            if (GUILayout.Button("Create Poissonus"))
-                creator.CreatePoissonus();
+            if (GUILayout.Button("Calculate Poisson"))
+                creator.CalculatePoisson();
+
+            if (GUILayout.Button("Spawn"))
+                creator.Spawn();
 
             if (GUILayout.Button("Destroy"))
                 creator.DestroyChildren();
