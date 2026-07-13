@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using TMPro;
 
@@ -78,7 +79,20 @@ namespace Core
 
         static async void Draw(string uri, int id)
         {
-            var smile = await Web.DownloadSpriteTexture(uri);
+            Texture2D smile = null;
+
+            var c = 0;
+            while (c < 10000)
+            {
+                smile = await Web.DownloadSpriteTexture(uri);
+                if (smile)
+                    break;
+
+                c++;
+
+                await Task.Delay(300);
+            }
+
             if (!smile)
                 return;
 

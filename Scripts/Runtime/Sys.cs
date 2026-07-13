@@ -386,8 +386,8 @@ namespace Core
             GetRef();
             Proceed();
         }
-        protected abstract void GetRef();
         protected abstract void Proceed();
+        protected virtual void GetRef() { }
     }
     #endregion
 

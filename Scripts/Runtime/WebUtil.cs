@@ -16,7 +16,11 @@ namespace Core
                 if (webRequest.result == UnityWebRequest.Result.Success)
                     return DownloadHandlerTexture.GetContent(webRequest);
                 else
+                {
+                    Log.Error(webRequest, webRequest.error);
+
                     return null;
+                }
             }
         }
     }
