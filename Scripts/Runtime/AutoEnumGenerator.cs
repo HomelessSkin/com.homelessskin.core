@@ -9,7 +9,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-namespace Game.Util
+namespace Core
 {
     public class AutoEnumGenerator : MonoBehaviour
     {

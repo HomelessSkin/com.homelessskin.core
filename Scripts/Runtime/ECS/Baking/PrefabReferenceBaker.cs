@@ -17,11 +17,12 @@ namespace Core
 
                 if (authoring.Prefabs != null)
                     for (int p = 0; p < authoring.Prefabs.Length; p++)
-                        AppendToBuffer(entity, new Source
-                        {
-                            ID = authoring.Prefabs[p].GetID(),
-                            Value = GetEntity(authoring.Prefabs[p], TransformUsageFlags.Dynamic),
-                        });
+                        if (authoring.Prefabs[p])
+                            AppendToBuffer(entity, new Source
+                            {
+                                ID = authoring.Prefabs[p].GetID(),
+                                Value = GetEntity(authoring.Prefabs[p], TransformUsageFlags.Dynamic),
+                            });
             }
         }
 

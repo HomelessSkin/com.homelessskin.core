@@ -3,7 +3,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-namespace Game.Util
+namespace Core
 {
     [CustomEditor(typeof(AutoEnumGenerator))]
     public class AutoEnumGeneratorEditor : Editor
