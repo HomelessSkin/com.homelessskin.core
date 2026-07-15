@@ -133,6 +133,7 @@ namespace Core
         }
     }
 
+    public struct PlayerTag : IComponentData { }
     public struct Spawn : IComponentData
     {
         public long OperationID;

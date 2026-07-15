@@ -61,6 +61,7 @@ namespace Core
             None = 0,
             Y = 1,
             Timer = 2,
+            PlayerDistance = 3,
 
 
         }
