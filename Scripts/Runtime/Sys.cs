@@ -325,6 +325,20 @@ namespace Core
             return buffer[0];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetBufferElement<T>(int id, DynamicBuffer<T> buffer, out T element) where T : unmanaged, IKeyBuffer
+        {
+            element = default;
+            for (int b = 0; b < buffer.Length; b++)
+                if (buffer[b].GetID() == id)
+                {
+                    element = buffer[b];
+
+                    return true;
+                }
+
+            return false;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static NativeList<T> GetConnected<U, T>(DynamicBuffer<U> from, DynamicBuffer<T> with, Allocator allocator = Allocator.Temp)
             where T : unmanaged, IKeyBuffer
             where U : unmanaged, IKeyBuffer
