@@ -316,6 +316,20 @@ namespace Core
             return -1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetElementIndex<T>(this DynamicBuffer<T> buffer, int id, out int index) where T : unmanaged, IKeyBuffer
+        {
+            index = -1;
+            for (int b = 0; b < buffer.Length; b++)
+                if (buffer[b].GetID() == id)
+                {
+                    index = b;
+
+                    return true;
+                }
+
+            return false;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetBufferElement<T>(int id, DynamicBuffer<T> buffer) where T : unmanaged, IKeyBuffer
         {
             for (int b = 0; b < buffer.Length; b++)
