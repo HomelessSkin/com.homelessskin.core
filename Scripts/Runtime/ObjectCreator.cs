@@ -17,6 +17,25 @@ namespace Core
 {
     public class ObjectCreator : MonoBehaviour
     {
+        public static GameObject CopyToScene(GameObject origin, Scene target, ConvertToPrefabInstanceSettings settings = null)
+        {
+            var prefab = PrefabUtility.GetCorrespondingObjectFromSource(origin);
+            if (prefab)
+                return CreateOnScene(prefab, target, settings);
+
+            return CreateOnScene(origin, target, settings);
+        }
+        public static GameObject CreateOnScene(GameObject prefab, Scene target, ConvertToPrefabInstanceSettings settings = null)
+        {
+            var go = Instantiate(prefab);
+            SceneManager.MoveGameObjectToScene(go, target);
+
+            if (settings != null)
+                PrefabUtility.ConvertToPrefabInstance(go, prefab, settings, InteractionMode.AutomatedAction);
+
+            return go;
+        }
+
         [SerializeField] int GridHorizontalBorder = 3;
         [SerializeField] int GridVerticalBorder = 3;
         [SerializeField] int GridHorizontalOffset = 0;
@@ -80,20 +99,14 @@ namespace Core
                 return;
 
             var parent = Scene.EditingScene.GetRootGameObjects()[ParentIndex].transform;
-            var settings = new ConvertToPrefabInstanceSettings
-            {
-
-            };
+            var settings = new ConvertToPrefabInstanceSettings { };
 
             for (int g = 0; g < Grid.Length; g++)
             {
                 var pos = Grid[g];
                 if (length(pos) > 0f)
                 {
-                    var newGO = Instantiate(Prefab);
-
-                    SceneManager.MoveGameObjectToScene(newGO, Scene.EditingScene);
-                    PrefabUtility.ConvertToPrefabInstance(newGO, Prefab, settings, InteractionMode.AutomatedAction);
+                    var newGO = CreateOnScene(Prefab, Scene.EditingScene, settings);
 
                     newGO.transform.SetParent(parent, false);
                     newGO.transform.localPosition = pos;
