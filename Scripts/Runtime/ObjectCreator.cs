@@ -23,7 +23,7 @@ namespace Core
             if (prefab)
                 return CreateOnScene(prefab, target, settings);
 
-            return CreateOnScene(origin, target, settings);
+            return CreateOnScene(origin, target);
         }
         public static GameObject CreateOnScene(GameObject prefab, Scene target, ConvertToPrefabInstanceSettings settings = null)
         {
