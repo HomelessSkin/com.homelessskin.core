@@ -15,6 +15,8 @@ namespace Core
 
         public int SpriteDensity;
         public Texture2D Texture;
+
+        [Space]
         public Texture2D[] DefaultSprites;
 
         public int WidthSprites => Texture.width / SpriteDensity;
@@ -75,6 +77,14 @@ namespace Core
             Draw(url, n);
 
             return n;
+        }
+        public static int GetCount()
+        {
+            for (int t = Data.DefaultSprites.Length; t < TextureMap.Length; t++)
+                if (TextureMap[t] == 0f)
+                    return t + 1;
+
+            return TextureMap.Length;
         }
 
         static async void Draw(string uri, int id)
