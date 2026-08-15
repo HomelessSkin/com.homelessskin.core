@@ -81,8 +81,8 @@ namespace Core
         public static int GetCount()
         {
             for (int t = Data.DefaultSprites.Length; t < TextureMap.Length; t++)
-                if (TextureMap[t] == 0f)
-                    return t + 1;
+                if (TextureMap[t] <= 0.0001f)
+                    return t;
 
             return TextureMap.Length;
         }
