@@ -23,8 +23,9 @@ namespace Core
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            if (!TryGetSingletonEntity<PlayerTag>(out var playerE))
-                return;
+            var playerPos = float3(0f);
+            if (TryGetSingletonEntity<PlayerTag>(out var playerE))
+                playerPos = GetComponent<LocalTransform>(playerE).Position;
 
             var ecb = Sys.ECB(state.WorldUpdateAllocator);
 
@@ -37,7 +38,7 @@ namespace Core
             new DestroyJob
             {
                 Delta = SystemAPI.Time.DeltaTime,
-                PlayerPos = GetComponent<LocalTransform>(playerE).Position,
+                PlayerPos = playerPos,
 
                 Entities = entities,
                 Spawns = spawns,
