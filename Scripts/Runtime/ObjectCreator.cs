@@ -50,7 +50,8 @@ namespace Core
 
         [Space]
         [SerializeField] Mesh Preview;
-        [SerializeField] NativeArray<float3> Grid;
+
+        NativeArray<float3> Grid;
 
         public void SetSeed(uint seed) => Poisson.Seed = seed;
         public void CreateGridus()
