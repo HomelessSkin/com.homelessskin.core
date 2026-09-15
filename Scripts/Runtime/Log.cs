@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -68,16 +69,23 @@ namespace Core
                 return;
             }
 
-            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-            var type = typeof(T);
+            var type = target.GetType();
+            var bindingFlags =
+                BindingFlags.Public |
+                BindingFlags.NonPublic |
+                BindingFlags.Instance;
 
             var fields = type
                 .GetFields(bindingFlags)
                 .Where(f => f.GetCustomAttribute<LogInfo>() != null);
 
-            if (fields.Count() == 0)
+            var properties = type
+                .GetProperties(bindingFlags)
+                .Where(p => p.GetCustomAttribute<LogInfo>() != null);
+
+            if (fields.Count() == 0 && properties.Count() == 0)
             {
-                Warning(agent, $"No marked Fields!");
+                Warning(agent, $"No marked Fields or Properties!");
                 Info(agent, $"-----------------------------");
 
                 return;
@@ -87,8 +95,16 @@ namespace Core
             {
                 var message = "";
 
-                FormatValue(field.GetValue(target), ref message);
+                FormatValue(field.GetValue(target), ref message, bindingFlags);
                 Info(agent, $"{field.Name}: {message}");
+            }
+
+            foreach (var property in properties)
+            {
+                var message = "";
+
+                FormatValue(property.GetValue(target), ref message, bindingFlags);
+                Info(agent, $"{property.Name}: {message}");
             }
 
             Info(agent, $"-----------------------------");
@@ -103,7 +119,7 @@ namespace Core
         }
         public static bool IsEmpty() => Q.Count == 0;
 
-        static void FormatValue(object value, ref string message)
+        static void FormatValue(object value, ref string message, BindingFlags bindingFlags)
         {
             if (value == null)
             {
@@ -125,14 +141,34 @@ namespace Core
 
                 var type = target.GetType();
                 var fields = type
-                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .GetFields(bindingFlags)
                     .Where(f => f.GetCustomAttribute<LogInfo>() != null);
 
+                var properties = type
+                    .GetProperties(bindingFlags)
+                    .Where(p => p.GetCustomAttribute<LogInfo>() != null);
+
+                var first = true;
                 foreach (var field in fields)
                 {
+                    if (!first)
+                        message += ", ";
+                    first = false;
+
                     message += field.Name + ": ";
 
-                    FormatValue(field.GetValue(target), ref message);
+                    FormatValue(field.GetValue(target), ref message, bindingFlags);
+                }
+
+                foreach (var property in properties)
+                {
+                    if (!first)
+                        message += ", ";
+                    first = false;
+
+                    message += property.Name + ": ";
+
+                    FormatValue(property.GetValue(target), ref message, bindingFlags);
                 }
 
                 message += "}";
@@ -140,12 +176,19 @@ namespace Core
                 return;
             }
 
-            if (value is IEnumerable<ILogTarget> list)
+            if (value is IEnumerable enumerable)
             {
                 message += "[ ";
 
-                foreach (var item in list)
-                    FormatValue(item, ref message);
+                var first = true;
+                foreach (var item in enumerable)
+                {
+                    if (!first)
+                        message += ", ";
+                    first = false;
+
+                    FormatValue(item, ref message, bindingFlags);
+                }
 
                 message += "]";
 
@@ -161,9 +204,9 @@ namespace Core
             public float Time;
             public float CallTime;
         }
-
-        public interface ILogTarget { }
-        [AttributeUsage(AttributeTargets.Field)]
-        public class LogInfo : Attribute { }
     }
+
+    public interface ILogTarget { }
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    public class LogInfo : Attribute { }
 }
