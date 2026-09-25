@@ -15,7 +15,7 @@ namespace Core
                 if (request.result == UnityWebRequest.Result.Success)
                     PlayAudioAndDestroy.Play(DownloadHandlerAudioClip.GetContent(request), clip.Volume);
                 else
-                    Log.Error(request, $"Sound Alert was not loaded:\n{request.error}");
+                    Log.Error(request, $"Sound Alert:\n{clip.Path}\nwas not loaded:\n{request.error}");
             }
         }
     }
