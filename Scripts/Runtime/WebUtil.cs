@@ -9,15 +9,15 @@ namespace Core
     {
         public static async Task<Texture2D> DownloadSpriteTexture(string url)
         {
-            using (var webRequest = UnityWebRequestTexture.GetTexture(url))
+            using (var request = UnityWebRequestTexture.GetTexture(url))
             {
-                await webRequest.SendWebRequest();
+                await request.SendWebRequest();
 
-                if (webRequest.result == UnityWebRequest.Result.Success)
-                    return DownloadHandlerTexture.GetContent(webRequest);
+                if (request.result == UnityWebRequest.Result.Success)
+                    return DownloadHandlerTexture.GetContent(request);
                 else
                 {
-                    Log.Error(webRequest, webRequest.error);
+                    Log.Error(request, request.error);
 
                     return null;
                 }
