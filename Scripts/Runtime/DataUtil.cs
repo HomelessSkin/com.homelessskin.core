@@ -436,6 +436,36 @@ namespace Core
     #region DATA UTIL
     public static class DataUtil
     {
+        public static void ResizeBilinear(ref Frame frame, int newWidth, int newHeight, Allocator allocator = Allocator.Temp)
+        {
+            var pixels = new NativeArray<Color32>(newWidth * newHeight, allocator);
+
+            for (int y = 1; y < newHeight - 1; y++)
+                for (int x = 1; x < newWidth - 1; x++)
+                {
+                    var u = x / (float)newWidth;
+                    var v = y / (float)newHeight;
+
+                    var srcX = u * frame.Width;
+                    var srcY = v * frame.Height;
+
+                    var x1 = (int)Mathf.Floor(srcX);
+                    var y1 = (int)Mathf.Floor(srcY);
+                    var x2 = Mathf.Min(x1 + 1, frame.Width - 1);
+                    var y2 = Mathf.Min(y1 + 1, frame.Height - 1);
+
+                    var xLerp = srcX - x1;
+                    var yLerp = srcY - y1;
+
+                    var top = Color.Lerp(frame.RawImage[x1 + y1 * frame.Width], frame.RawImage[x2 + y1 * frame.Width], xLerp);
+                    var bottom = Color.Lerp(frame.RawImage[x1 + y2 * frame.Width], frame.RawImage[x2 + y2 * frame.Width], xLerp);
+
+                    pixels[y * newWidth + x] = Color.Lerp(top, bottom, yLerp);
+                }
+
+            frame.RawImage.Dispose();
+            frame.RawImage = pixels;
+        }
         public static Texture2D ResizeBilinear(Texture2D source, int newWidth, int newHeight)
         {
             var result = new Texture2D(newWidth, newHeight);

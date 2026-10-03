@@ -3,12 +3,14 @@ using System.Threading.Tasks;
 
 using TMPro;
 
+using Unity.Collections;
+
 using UnityEngine;
 
 namespace Core
 {
     #region STREAMING SPRITES DATA
-    [CreateAssetMenu(fileName = "StreamingSpritesData", menuName = "Core/Streaming Sprites Data")]
+    [CreateAssetMenu(fileName = "Streaming Sprites Data", menuName = "Core/Streaming Sprites Data")]
     public class StreamingSpritesData : ScriptableObject
     {
         public TMP_SpriteAsset Asset;
@@ -31,35 +33,55 @@ namespace Core
         static StreamingSpritesData Data;
 
         static float[] TextureMap;
+
         static Dictionary<int, (int, int)> HashIndex;
+        static Dictionary<int, Animation> Animations;
 
         public static void Prepare(StreamingSpritesData data)
         {
             Data = data;
+
             TextureMap = new float[Data.SpriteDensity * Data.SpriteDensity];
             HashIndex = new Dictionary<int, (int, int)>();
+            Animations = new Dictionary<int, Animation>();
 
             for (int d = 0; d < Data.DefaultSprites.Length; d++)
-                Draw(Data.DefaultSprites[d], d);
-        }
-        public static void RemoveRange(List<int> toRemove)
-        {
-            for (int s = 0; s < toRemove.Count; s++)
             {
-                var key = toRemove[s];
-                if (!HashIndex.TryGetValue(key, out var smile))
-                    continue;
+                var sprite = Data.DefaultSprites[d];
+                var frame = new Frame(sprite.width, sprite.height, Allocator.Persistent);
 
-                smile.Item2--;
-                if (smile.Item2 == 0)
-                {
-                    TextureMap[smile.Item1] = 0f;
+                Draw(frame, d);
 
-                    HashIndex.Remove(key);
-                }
-                else
-                    HashIndex[key] = smile;
+                frame.RawImage.Dispose();
             }
+        }
+        public static void UpdateAnimations(float delta)
+        {
+            foreach (var (id, animation) in Animations)
+            {
+                var frame = animation.Step(delta);
+                if (frame != null)
+                    Draw(frame, id);
+            }
+
+            SaveActions();
+        }
+        public static int GetAnimationIndex(int hash, string url)
+        {
+            if (HashIndex.TryGetValue(hash, out var i))
+            {
+                i.Item2++;
+                HashIndex[hash] = i;
+
+                return i.Item1;
+            }
+
+            var n = GetFreeOrEarlier();
+            HashIndex[hash] = (n, 1);
+
+            LoadAnimation(url, n);
+
+            return n;
         }
         public static int GetSpriteIndex(int hash, string url)
         {
@@ -74,7 +96,7 @@ namespace Core
             var n = GetFreeOrEarlier();
             HashIndex[hash] = (n, 1);
 
-            Draw(url, n);
+            LoadSprite(url, n);
 
             return n;
         }
@@ -87,51 +109,26 @@ namespace Core
             return TextureMap.Length;
         }
 
-        static async void Draw(string uri, int id)
-        {
-            Texture2D smile = null;
+        //public static void RemoveRange(List<int> toRemove)
+        //{
+        //    for (int s = 0; s < toRemove.Count; s++)
+        //    {
+        //        var key = toRemove[s];
+        //        if (!HashIndex.TryGetValue(key, out var smile))
+        //            continue;
 
-            var c = 0;
-            while (c < 10000)
-            {
-                smile = await Web.DownloadSpriteTexture(uri);
-                if (smile)
-                    break;
+        //        smile.Item2--;
+        //        if (smile.Item2 == 0)
+        //        {
+        //            TextureMap[smile.Item1] = 0f;
 
-                c++;
+        //            HashIndex.Remove(key);
+        //        }
+        //        else
+        //            HashIndex[key] = smile;
+        //    }
+        //}
 
-                await Task.Delay(300);
-            }
-
-            if (!smile)
-                return;
-
-            Draw(smile, id);
-        }
-        static void Draw(Texture2D smile, int id)
-        {
-            smile = DataUtil.ResizeBilinear(smile, Data.WidthSprites, Data.HeightSprites);
-            var x = Data.WidthSprites * (id % Data.SpriteDensity);
-            var y = Data.Texture.height - Data.HeightSprites * (id / Data.SpriteDensity + 1);
-
-            var pixels = smile.GetPixels32();
-            for (int p = 0; p < pixels.Length; p++)
-            {
-                var pixel = pixels[p];
-                if (pixel.r < 10 &&
-                     pixel.g < 10 &&
-                     pixel.b < 10)
-                {
-                    pixel.r = pixel.g = pixel.b = 10;
-                    pixels[p] = pixel;
-                }
-            }
-
-            Data.Texture.SetPixels32(x, y, Data.WidthSprites, Data.HeightSprites, pixels);
-            Data.Texture.Apply();
-
-            Data.Asset.UpdateLookupTables();
-        }
         static int GetFreeOrEarlier()
         {
             var earlier = -1;
@@ -155,6 +152,117 @@ namespace Core
 
             return earlier;
         }
+        static void Draw(Frame frame, int id)
+        {
+            var x = Data.WidthSprites * (id % Data.SpriteDensity);
+            var y = Data.Texture.height - Data.HeightSprites * (id / Data.SpriteDensity + 1);
+
+            Data.Texture.SetPixels32(x, y, Data.WidthSprites, Data.HeightSprites, frame.RawImage.ToArray());
+        }
+
+        static void SaveActions()
+        {
+            Data.Texture.Apply();
+            Data.Asset.UpdateLookupTables();
+        }
+
+        static async void LoadSprite(string url, int id)
+        {
+            var c = 0;
+            while (c < 10000)
+            {
+                var frame = await Web.DownloadSpriteData(url);
+                if (frame != null)
+                {
+                    DataUtil.ResizeBilinear(ref frame, Data.WidthSprites, Data.HeightSprites);
+
+                    Draw(frame, id);
+
+                    SaveActions();
+
+                    break;
+                }
+
+                c++;
+
+                await Task.Delay(300);
+            }
+        }
+        static async void LoadAnimation(string url, int id)
+        {
+            var c = 0;
+            while (c < 10000)
+            {
+                var list = await GIF.LoadAsListAsync(url);
+                if (list != null)
+                {
+                    Animations[id] = new Animation(list);
+
+                    break;
+                }
+
+                c++;
+
+                await Task.Delay(300);
+            }
+        }
+
+        #region ANIMATION
+        class Animation
+        {
+            int Current = 0;
+            float FrameT = 0f;
+
+            List<Frame> Frames;
+
+            public Animation(List<Frame> frames)
+            {
+                Frames = new List<Frame>();
+                for (int f = 0; f < frames.Count; f++)
+                {
+                    var frame = frames[f];
+
+                    DataUtil.ResizeBilinear(ref frame, Data.WidthSprites, Data.HeightSprites, Allocator.Persistent);
+
+                    Frames.Add(frame);
+                }
+            }
+
+            ~Animation()
+            {
+                DisposeFrames();
+            }
+
+            public Frame Step(float delta)
+            {
+                if (Frames != null && Frames.Count > 0)
+                {
+                    FrameT -= delta;
+                    if (FrameT <= 0f)
+                    {
+                        Current = (Current + 1) % Frames.Count;
+                        FrameT += Frames[Current].Delay * 0.001f;
+
+                        return Frames[Current];
+                    }
+                }
+
+                return null;
+            }
+
+            void DisposeFrames()
+            {
+                for (int f = 0; f < Frames.Count; f++)
+                    if (Frames[f].RawImage.IsCreated)
+                        Frames[f].RawImage.Dispose();
+
+                Current = 0;
+                FrameT = 0f;
+
+                Frames.Clear();
+            }
+        }
+        #endregion
     }
     #endregion
 }

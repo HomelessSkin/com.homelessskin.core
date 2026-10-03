@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+
+using Unity.Collections;
 
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,6 +13,41 @@ namespace Core
 {
     public static class GIF
     {
+        public static Texture2D UnpackAsAtlas(byte[] data, int atlasW = 0, TextureFormat format = TextureFormat.RGBAFloat)
+        {
+            using (var decoder = new Decoder(data))
+            {
+                var list = new List<Frame>();
+                while (true)
+                {
+                    var img = decoder.NextImage();
+                    if (img == null)
+                        break;
+
+                    list.Add(img);
+                }
+                if (list.Count == 0)
+                    return null;
+
+                var spriteW = atlasW == 0 ? list.Count : atlasW;
+                var spriteH = atlasW == 0 ? 1 : list.Count / atlasW + 1;
+
+                var result = new Texture2D(spriteW * decoder.Width, spriteH * decoder.Height, format, false);
+                for (int x = 0; x < spriteW; x++)
+                    for (int y = 0; y < spriteH; y++)
+                    {
+                        var index = x + y * spriteW;
+                        if (index >= list.Count)
+                            continue;
+
+                        result.SetPixels32(x * decoder.Width, y * decoder.Height, decoder.Width, decoder.Height, list[index].RawImage.ToArray());
+                    }
+
+                result.Apply();
+
+                return result;
+            }
+        }
         public static async Task<Texture2D> LoadAsAtlasAsync(string uri, int atlasW = 0, TextureFormat format = TextureFormat.RGBAFloat)
         {
             using (var request = UnityWebRequest.Get(uri))
@@ -36,106 +72,52 @@ namespace Core
 
             return UnpackAsAtlas(data, atlasW, format);
         }
-        public static Texture2D UnpackAsAtlas(byte[] data, int atlasW = 0, TextureFormat format = TextureFormat.RGBAFloat)
+
+        public static List<Frame> UnpackAsList(byte[] data, Allocator allocator = Allocator.Temp)
         {
             using (var decoder = new Decoder(data))
             {
-                var list = new List<GIFFrame>();
+                var list = new List<Frame>();
                 while (true)
                 {
-                    var img = decoder.NextImage();
+                    var img = decoder.NextImage(allocator);
                     if (img == null)
                         break;
 
                     list.Add(img);
                 }
-                if (list.Count == 0)
-                    return null;
 
-                LimitToFps(ref list, 30);
-
-                var spriteW = atlasW == 0 ? list.Count : atlasW;
-                var spriteH = atlasW == 0 ? 1 : list.Count / atlasW + 1;
-
-                var result = new Texture2D(spriteW * decoder.Width, spriteH * decoder.Height, format, false);
-                for (int x = 0; x < spriteW; x++)
-                    for (int y = 0; y < spriteH; y++)
-                    {
-                        var index = x + y * spriteW;
-                        if (index >= list.Count)
-                            continue;
-
-                        result.SetPixels32(x * decoder.Width, y * decoder.Height, decoder.Width, decoder.Height, list[index].RawImage);
-                    }
-
-                result.Apply();
-
-                return result;
+                return list;
             }
         }
-
-        static void LimitToFps(ref List<GIFFrame> frames, int targetFps)
+        public static async Task<List<Frame>> LoadAsListAsync(string uri)
         {
-            var totalMs = 0;
-            foreach (var f in frames)
-                totalMs += f.Delay;
+            using (var request = UnityWebRequest.Get(uri))
+            {
+                await request.SendWebRequest();
+                if (request.result == UnityWebRequest.Result.Success)
+                    return UnpackAsList(request.downloadHandler.data, Allocator.Persistent);
+                else
+                {
+                    Log.Error(request, request.error);
 
-            var originalFps = frames.Count * 1000f / totalMs;
-            var step = Mathf.RoundToInt(originalFps / targetFps);
-            if (step <= 1)
-                return;
+                    return null;
+                }
+            }
+        }
+        public static async Task<List<Frame>> ReadAsListAsync(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
 
-            for (int i = frames.Count - 1; i >= 0; i -= step)
-                frames.RemoveAt(i);
+            var data = await File.ReadAllBytesAsync(path);
+
+            return UnpackAsList(data);
         }
 
         #region DECODER
-        class GIFFrame
-        {
-            public int Width;
-            public int Height;
-            public int Delay;
-            public Color32[] RawImage;
-
-            public GIFFrame() { }
-            public GIFFrame(GIFFrame img)
-            {
-                Width = img.Width;
-                Height = img.Height;
-                Delay = img.Delay;
-                RawImage = img.RawImage != null ? (Color32[])img.RawImage.Clone() : null;
-            }
-
-            public GIFFrame Clone() => new GIFFrame(this);
-        }
         class Decoder : IDisposable
         {
-            public static string Ident()
-            {
-                var v = "1.1";
-                var e = BitConverter.IsLittleEndian ? "L" : "B";
-
-#if ENABLE_IL2CPP
-            var b = "N";
-#else
-                var b = "M";
-#endif
-
-#if mgGIF_UNSAFE
-            var s = "U";
-#else
-                var s = "S";
-#endif
-
-#if NET_4_6
-            var n = "4.x";
-#else
-                var n = "2.0";
-#endif
-
-                return $"{v} {e}{s}{b} {n}";
-            }
-
             const uint NoCode = 0xFFFF;
             const ushort NoTransparency = 0xFFFF;
             readonly int[] Pow2 = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
@@ -147,13 +129,11 @@ namespace Core
 
             int D;
             ushort TransparentIndex;
+
             ushort ImageLeft;
             ushort ImageTop;
             ushort ImageWidth;
             ushort ImageHeight;
-
-            // current image
-            GIFFrame Image = new GIFFrame();
 
             byte[] Input;
             int[] Indices = new int[4096];
@@ -163,32 +143,19 @@ namespace Core
             Color32[] GlobalColourTable;
             Color32[] LocalColourTable;
             Color32[] ActiveColourTable;
-            Color32[] Output;
-            Color32[] PreviousImage;
 
-            public Decoder() { }
             public Decoder(byte[] data)
-                : this()
-            {
-                Load(data);
-            }
-            public Decoder Load(byte[] data)
             {
                 Input = data;
+
                 D = 0;
+                TransparentIndex = NoTransparency;
 
                 GlobalColourTable = new Color32[256];
                 LocalColourTable = new Color32[256];
-                TransparentIndex = NoTransparency;
-                Output = null;
-                PreviousImage = null;
-
-                Image.Delay = 0;
-
-                return this;
             }
 
-            public GIFFrame NextImage()
+            public Frame NextImage(Allocator allocator = Allocator.Temp)
             {
                 // if at start of data, read header
 
@@ -197,37 +164,37 @@ namespace Core
 
                 // read blocks until we find an image block
 
+                var image = new Frame(Width, Height, allocator);
                 while (true)
                     switch ((Block)ReadByte())
                     {
                         case Block.Image:
                         // return the image if we got one
-                        var img = ReadImageBlock();
-                        if (img != null)
-                            return img.Clone();
-                        break;
+                        ReadImageBlock(ref image, allocator);
+                        return image;
 
                         case Block.Extension:
                         if ((Extension)ReadByte() == Extension.GraphicControl)
-                            ReadControlBlock();
+                            ReadControlBlock(ref image);
                         else
                             SkipBlocks();
                         break;
 
                         case Block.End:
-                        // end block - stop!
+                        if (image.RawImage.IsCreated)
+                            image.RawImage.Dispose();
+
                         return null;
 
                         default:
                         Log.Error(this, $"Unexpected block type");
+
+                        if (image.RawImage.IsCreated)
+                            image.RawImage.Dispose();
+
                         return null;
                     }
             }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            byte ReadByte() => Input[D++];
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            ushort ReadUInt16() => (ushort)(Input[D++] | Input[D++] << 8);
 
             void ReadHeader()
             {
@@ -255,9 +222,6 @@ namespace Core
                 Width = ReadUInt16();
                 Height = ReadUInt16();
 
-                Image.Width = Width;
-                Image.Height = Height;
-
                 var flags = (ImageFlag)ReadByte();
                 var bgIndex = ReadByte(); // background colour
 
@@ -277,14 +241,14 @@ namespace Core
                     blockSize = Input[D++];
                 }
             }
-            void ReadControlBlock()
+            void ReadControlBlock(ref Frame image)
             {
                 // read block
 
                 ReadByte(); // block size (0x04)
 
                 var flags = (ControlFlags)ReadByte();  // flags
-                Image.Delay = ReadUInt16() * 10; // delay (1/100th -> milliseconds)
+                image.Delay = ReadUInt16() * 10; // delay (1/100th -> milliseconds)
                 var transparentColour = ReadByte(); // transparent colour
 
                 ReadByte(); // terminator (0x00)
@@ -298,68 +262,47 @@ namespace Core
 
                 // dispose of current image
 
-                switch ((Disposal)(flags & ControlFlags.DisposalMask))
-                {
-                    default:
-                    case Disposal.None:
-                    case Disposal.DoNotDispose:
-                    // remember current image in case we need to "return to previous"
-                    PreviousImage = Output;
-                    break;
+                //switch ((Disposal)(flags & ControlFlags.DisposalMask))
+                //{
+                //    default:
+                //    case Disposal.None:
+                //    case Disposal.DoNotDispose:
+                //    // remember current image in case we need to "return to previous"
+                //    PreviousImage = Output;
+                //    break;
 
-                    case Disposal.RestoreBackground:
-                    // empty image - don't track
-                    Output = new Color32[Width * Height];
-                    break;
+                //    case Disposal.RestoreBackground:
+                //    // empty image - don't track
+                //    Output = new Color32[Width * Height];
+                //    break;
 
-                    case Disposal.ReturnToPrevious:
-                    // return to previous image
-                    Output = new Color32[Width * Height];
-                    if (PreviousImage != null)
-                        Array.Copy(PreviousImage, Output, Output.Length);
-                    break;
-                }
+                //    case Disposal.ReturnToPrevious:
+                //    // return to previous image
+                //    Output = new Color32[Width * Height];
+                //    if (PreviousImage != null)
+                //        Array.Copy(PreviousImage, Output, Output.Length);
+                //    break;
+                //}
             }
-            void Deinterlace()
+            void ReadImageBlock(ref Frame image, Allocator allocator)
             {
-                var numRows = Output.Length / Width;
-                var writePos = Output.Length - Width; // NB: work backwards due to Y-coord flip
-                var input = Output;
+                ImageLeft = ReadUInt16();
+                ImageTop = ReadUInt16();
+                ImageWidth = ReadUInt16();
+                ImageHeight = ReadUInt16();
 
-                Output = new Color32[Output.Length];
+                var flags = (ImageFlag)ReadByte();
+                if (flags.HasFlag(ImageFlag.ColourTable))
+                    ActiveColourTable = ReadColourTable(LocalColourTable, flags);
+                else
+                    ActiveColourTable = GlobalColourTable;
 
-                for (var row = 0; row < numRows; row++)
-                {
-                    var copyRow = 0;
+                DecompressLZW(ref image);
 
-                    // every 8th row starting at 0
-                    if (row % 8 == 0)
-                        copyRow = row / 8;
-                    // every 8th row starting at 4
-                    else if ((row + 4) % 8 == 0)
-                    {
-                        var o = numRows / 8;
-                        copyRow = o + (row - 4) / 8;
-                    }
-                    // every 4th row starting at 2
-                    else if ((row + 2) % 4 == 0)
-                    {
-                        var o = numRows / 4;
-                        copyRow = o + (row - 2) / 4;
-                    }
-                    // every 2nd row starting at 1
-                    else // if( ( r + 1 ) % 2 == 0 )
-                    {
-                        var o = numRows / 2;
-                        copyRow = o + (row - 1) / 2;
-                    }
-
-                    Array.Copy(input, (numRows - copyRow - 1) * Width, Output, writePos, Width);
-
-                    writePos -= Width;
-                }
+                if (flags.HasFlag(ImageFlag.Interlaced))
+                    Deinterlace(ref image, allocator);
             }
-            void DecompressLZW()
+            void DecompressLZW(ref Frame image)
             {
                 // output write position
 
@@ -417,7 +360,6 @@ namespace Core
                     else
                     {
                         // reload shift register
-
 
                         // if start of new block
 
@@ -510,7 +452,7 @@ namespace Core
                         var code = Codes[codePos++];
 
                         if (code != TransparentIndex && col < Width)
-                            Output[row + col] = ActiveColourTable[code];
+                            image.RawImage[row + col] = ActiveColourTable[code];
 
                         if (++col == rightEdge)
                         {
@@ -529,7 +471,7 @@ namespace Core
                     if (plusOne)
                     {
                         if (newCode != TransparentIndex && col < Width)
-                            Output[row + col] = ActiveColourTable[newCode];
+                            image.RawImage[row + col] = ActiveColourTable[newCode];
 
                         if (++col == rightEdge)
                         {
@@ -587,6 +529,52 @@ namespace Core
                 // skip any remaining blocks
                 SkipBlocks();
             }
+            void Deinterlace(ref Frame image, Allocator allocator)
+            {
+                var numRows = image.RawImage.Length / Width;
+                var writePos = image.RawImage.Length - Width; // NB: work backwards due to Y-coord flip
+                var input = image.RawImage;
+
+                image.RawImage = new NativeArray<Color32>(image.RawImage.Length, allocator);
+
+                for (var row = 0; row < numRows; row++)
+                {
+                    var copyRow = 0;
+
+                    // every 8th row starting at 0
+                    if (row % 8 == 0)
+                        copyRow = row / 8;
+                    // every 8th row starting at 4
+                    else if ((row + 4) % 8 == 0)
+                    {
+                        var o = numRows / 8;
+                        copyRow = o + (row - 4) / 8;
+                    }
+                    // every 4th row starting at 2
+                    else if ((row + 2) % 4 == 0)
+                    {
+                        var o = numRows / 4;
+                        copyRow = o + (row - 2) / 4;
+                    }
+                    // every 2nd row starting at 1
+                    else // if( ( r + 1 ) % 2 == 0 )
+                    {
+                        var o = numRows / 2;
+                        copyRow = o + (row - 1) / 2;
+                    }
+
+                    for (int w = 0; w < Width; w++)
+                        image.RawImage[writePos + w] = input[(numRows - copyRow - 1) * Width + w];
+
+                    writePos -= Width;
+                }
+
+                if (allocator != Allocator.Temp)
+                    input.Dispose();
+            }
+
+            byte ReadByte() => Input[D++];
+            ushort ReadUInt16() => (ushort)(Input[D++] | Input[D++] << 8);
 
             Color32[] ReadColourTable(Color32[] colourTable, ImageFlag flags)
             {
@@ -600,50 +588,6 @@ namespace Core
                     );
 
                 return colourTable;
-            }
-            GIFFrame ReadImageBlock()
-            {
-                // read image block header
-
-                ImageLeft = ReadUInt16();
-                ImageTop = ReadUInt16();
-                ImageWidth = ReadUInt16();
-                ImageHeight = ReadUInt16();
-
-                var flags = (ImageFlag)ReadByte();
-
-                // bad image if we don't have any dimensions
-
-                if (ImageWidth == 0 || ImageHeight == 0)
-                    return null;
-
-                // read colour table
-
-                if (flags.HasFlag(ImageFlag.ColourTable))
-                    ActiveColourTable = ReadColourTable(LocalColourTable, flags);
-                else
-                    ActiveColourTable = GlobalColourTable;
-
-                if (Output == null)
-                {
-                    Output = new Color32[Width * Height];
-                    PreviousImage = Output;
-                }
-
-                // read image data
-
-                DecompressLZW();
-
-                // deinterlace
-
-                if (flags.HasFlag(ImageFlag.Interlaced))
-                    Deinterlace();
-
-                // return image
-
-                Image.RawImage = Output;
-
-                return Image;
             }
 
             #region DISPOSABLE
@@ -689,5 +633,22 @@ namespace Core
             #endregion
         }
         #endregion
+    }
+
+    public class Frame
+    {
+        public int Width;
+        public int Height;
+        public int Delay;
+
+        public NativeArray<Color32> RawImage;
+
+        public Frame(int width, int height, Allocator allocator)
+        {
+            Width = width;
+            Height = height;
+
+            RawImage = new NativeArray<Color32>(width * height, allocator);
+        }
     }
 }
