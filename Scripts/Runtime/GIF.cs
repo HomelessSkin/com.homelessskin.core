@@ -125,8 +125,11 @@ namespace Core
             public string Version;
             public ushort Width;
             public ushort Height;
-            public Color32 BackgroundColour;
 
+            Disposal CurrentDisposal = Disposal.None;
+            Disposal PrevDisposal = Disposal.None;
+
+            bool SnapshotValid;
             int D;
             ushort TransparentIndex;
 
@@ -134,6 +137,11 @@ namespace Core
             ushort ImageTop;
             ushort ImageWidth;
             ushort ImageHeight;
+
+            ushort PrevLeft, PrevTop, PrevWidth, PrevHeight;
+            ushort PrevTransparentIndex = NoTransparency;
+
+            Color32 BackgroundColour;
 
             byte[] Input;
             int[] Indices = new int[4096];
@@ -144,10 +152,12 @@ namespace Core
             Color32[] LocalColourTable;
             Color32[] ActiveColourTable;
 
+            NativeArray<Color32> Canvas;
+            NativeArray<Color32> Snapshot;
+
             public Decoder(byte[] data)
             {
                 Input = data;
-
                 D = 0;
                 TransparentIndex = NoTransparency;
 
@@ -157,19 +167,15 @@ namespace Core
 
             public Frame NextImage(Allocator allocator = Allocator.Temp)
             {
-                // if at start of data, read header
-
                 if (D == 0)
                     ReadHeader();
 
-                // read blocks until we find an image block
-
                 var image = new Frame(Width, Height, allocator);
                 while (true)
+                {
                     switch ((Block)ReadByte())
                     {
                         case Block.Image:
-                        // return the image if we got one
                         ReadImageBlock(ref image, allocator);
                         return image;
 
@@ -183,7 +189,6 @@ namespace Core
                         case Block.End:
                         if (image.RawImage.IsCreated)
                             image.RawImage.Dispose();
-
                         return null;
 
                         default:
@@ -191,9 +196,9 @@ namespace Core
 
                         if (image.RawImage.IsCreated)
                             image.RawImage.Dispose();
-
                         return null;
                     }
+                }
             }
 
             void ReadHeader()
@@ -205,8 +210,6 @@ namespace Core
                     return;
                 }
 
-                // signature
-
                 Version = Encoding.ASCII.GetString(Input, 0, 6);
                 D = 6;
 
@@ -217,20 +220,29 @@ namespace Core
                     return;
                 }
 
-                // read header
-
                 Width = ReadUInt16();
                 Height = ReadUInt16();
 
                 var flags = (ImageFlag)ReadByte();
-                var bgIndex = ReadByte(); // background colour
-
-                ReadByte(); // aspect ratio
+                var bgIndex = ReadByte();
+                ReadByte();
 
                 if (flags.HasFlag(ImageFlag.ColourTable))
                     ReadColourTable(GlobalColourTable, flags);
 
                 BackgroundColour = GlobalColourTable[bgIndex];
+
+                if (Canvas.IsCreated)
+                    Canvas.Dispose();
+
+                Canvas = new NativeArray<Color32>(Width * Height, Allocator.Persistent);
+                var clear = new Color32(0, 0, 0, 0);
+                for (int i = 0; i < Canvas.Length; i++)
+                    Canvas[i] = clear;
+
+                PrevDisposal = Disposal.None;
+                PrevTransparentIndex = NoTransparency;
+                PrevLeft = PrevTop = PrevWidth = PrevHeight = 0;
             }
             void SkipBlocks()
             {
@@ -243,77 +255,112 @@ namespace Core
             }
             void ReadControlBlock(ref Frame image)
             {
-                // read block
+                ReadByte();
 
-                ReadByte(); // block size (0x04)
+                var flags = (ControlFlags)ReadByte();
+                image.Delay = ReadUInt16() * 10;
+                var transparentColour = ReadByte();
 
-                var flags = (ControlFlags)ReadByte();  // flags
-                image.Delay = ReadUInt16() * 10; // delay (1/100th -> milliseconds)
-                var transparentColour = ReadByte(); // transparent colour
+                ReadByte();
 
-                ReadByte(); // terminator (0x00)
-
-                // has transparent colour?
-
-                if (flags.HasFlag(ControlFlags.HasTransparency))
-                    TransparentIndex = transparentColour;
-                else
-                    TransparentIndex = NoTransparency;
-
-                // dispose of current image
-
-                //switch ((Disposal)(flags & ControlFlags.DisposalMask))
-                //{
-                //    default:
-                //    case Disposal.None:
-                //    case Disposal.DoNotDispose:
-                //    // remember current image in case we need to "return to previous"
-                //    PreviousImage = Output;
-                //    break;
-
-                //    case Disposal.RestoreBackground:
-                //    // empty image - don't track
-                //    Output = new Color32[Width * Height];
-                //    break;
-
-                //    case Disposal.ReturnToPrevious:
-                //    // return to previous image
-                //    Output = new Color32[Width * Height];
-                //    if (PreviousImage != null)
-                //        Array.Copy(PreviousImage, Output, Output.Length);
-                //    break;
-                //}
+                TransparentIndex = flags.HasFlag(ControlFlags.HasTransparency) ? transparentColour : NoTransparency;
+                CurrentDisposal = (Disposal)(flags & ControlFlags.DisposalMask);
             }
             void ReadImageBlock(ref Frame image, Allocator allocator)
             {
+                ApplyPrevDisposal();
+
                 ImageLeft = ReadUInt16();
                 ImageTop = ReadUInt16();
                 ImageWidth = ReadUInt16();
                 ImageHeight = ReadUInt16();
 
                 var flags = (ImageFlag)ReadByte();
-                if (flags.HasFlag(ImageFlag.ColourTable))
-                    ActiveColourTable = ReadColourTable(LocalColourTable, flags);
+                ActiveColourTable = flags.HasFlag(ImageFlag.ColourTable)
+                    ? ReadColourTable(LocalColourTable, flags)
+                    : GlobalColourTable;
+
+                if (CurrentDisposal == Disposal.ReturnToPrevious)
+                {
+                    if (!Snapshot.IsCreated || Snapshot.Length != Canvas.Length)
+                    {
+                        if (Snapshot.IsCreated)
+                            Snapshot.Dispose();
+
+                        Snapshot = new NativeArray<Color32>(Canvas.Length, Allocator.Persistent);
+                    }
+
+                    NativeArray<Color32>.Copy(Canvas, Snapshot, Canvas.Length);
+                    SnapshotValid = true;
+                }
                 else
-                    ActiveColourTable = GlobalColourTable;
+                    SnapshotValid = false;
 
                 DecompressLZW(ref image);
 
                 if (flags.HasFlag(ImageFlag.Interlaced))
-                    Deinterlace(ref image, allocator);
+                    Deinterlace(ref image);
+
+                CompositeOntoCanvas(image.RawImage);
+
+                NativeArray<Color32>.Copy(Canvas, image.RawImage, Canvas.Length);
+
+                PrevDisposal = CurrentDisposal;
+                PrevLeft = ImageLeft;
+                PrevTop = ImageTop;
+                PrevWidth = ImageWidth;
+                PrevHeight = ImageHeight;
+                PrevTransparentIndex = TransparentIndex;
+            }
+            void ApplyPrevDisposal()
+            {
+                if (!Canvas.IsCreated)
+                    return;
+
+                switch (PrevDisposal)
+                {
+                    case Disposal.None:
+                    case Disposal.DoNotDispose:
+                    break;
+
+                    case Disposal.RestoreBackground:
+                    var fill = new Color32(0, 0, 0, 0);
+
+                    var topRow = Height - PrevTop - 1;
+                    for (int y = 0; y < PrevHeight; y++)
+                    {
+                        int rowBase = (topRow - y) * Width;
+                        if (rowBase < 0)
+                            continue;
+
+                        for (int x = 0; x < PrevWidth; x++)
+                        {
+                            var idx = rowBase + PrevLeft + x;
+                            if ((uint)idx < (uint)Canvas.Length)
+                                Canvas[idx] = fill;
+                        }
+                    }
+                    break;
+
+                    case Disposal.ReturnToPrevious:
+                    if (SnapshotValid && Snapshot.IsCreated)
+                        NativeArray<Color32>.Copy(Snapshot, Canvas, Canvas.Length);
+                    break;
+                }
+            }
+            void CompositeOntoCanvas(NativeArray<Color32> source)
+            {
+                for (int i = 0; i < source.Length && i < Canvas.Length; i++)
+                    if (source[i].a != 0)
+                        Canvas[i] = source[i];
             }
             void DecompressLZW(ref Frame image)
             {
-                // output write position
-
-                var row = (Height - ImageTop - 1) * Width; // reverse rows for unity texture coords
+                var row = (Height - ImageTop - 1) * Width;
                 var col = ImageLeft;
                 var rightEdge = ImageLeft + ImageWidth;
 
-                // setup codes
-
                 var minimumCodeSize = Input[D++];
-
                 if (minimumCodeSize > 11)
                     minimumCodeSize = 11;
 
@@ -323,33 +370,25 @@ namespace Core
                 var clearCode = maximumCodeSize;
                 var endCode = maximumCodeSize + 1;
 
-                // initialise buffers
-
                 var codesEnd = 0;
                 var numCodes = maximumCodeSize + 2;
 
                 for (ushort i = 0; i < numCodes; i++)
                 {
                     Indices[i] = codesEnd;
-                    Codes[codesEnd++] = 1; // length
-                    Codes[codesEnd++] = i; // code
+                    Codes[codesEnd++] = 1;
+                    Codes[codesEnd++] = i;
                 }
 
-                // LZW decode loop
-
-                var previousCode = NoCode; // last code processed
-                var mask = (uint)(nextSize - 1); // mask out code bits
-                var shiftRegister = 0u; // shift register holds the bytes coming in from the input stream, we shift down by the number of bits
-
-                var bitsAvailable = 0; // number of bits available to read in the shift register
-                var bytesAvailable = 0; // number of bytes left in current block
-
+                var previousCode = NoCode;
+                var mask = (uint)(nextSize - 1);
+                var shiftRegister = 0u;
+                var bitsAvailable = 0;
+                var bytesAvailable = 0;
                 var blockPos = 0;
 
                 while (true)
                 {
-                    // get next code
-
                     var curCode = shiftRegister & mask;
 
                     if (bitsAvailable >= codeSize)
@@ -359,35 +398,21 @@ namespace Core
                     }
                     else
                     {
-                        // reload shift register
-
-                        // if start of new block
-
                         if (bytesAvailable <= 0)
                         {
-                            // read blocksize
                             bytesAvailable = Input[D++];
-
-                            // exit if end of stream
                             if (bytesAvailable == 0)
                                 return;
 
-                            // read block
-                            CurBlock[(bytesAvailable - 1) / 4] = 0; // zero last entry
-
+                            CurBlock[(bytesAvailable - 1) / 4] = 0;
                             Buffer.BlockCopy(Input, D, CurBlock, 0, bytesAvailable);
-
                             blockPos = 0;
                             D += bytesAvailable;
                         }
 
-                        // load shift register
-
                         shiftRegister = CurBlock[blockPos++];
                         var newBits = bytesAvailable >= 4 ? 32 : bytesAvailable * 8;
                         bytesAvailable -= 4;
-
-                        // read remaining bits
 
                         if (bitsAvailable > 0)
                         {
@@ -404,45 +429,31 @@ namespace Core
                         }
                     }
 
-                    // process code
-
                     if (curCode == clearCode)
                     {
-                        // reset codes
                         codeSize = minimumCodeSize + 1;
                         nextSize = Pow2[codeSize];
                         numCodes = maximumCodeSize + 2;
-
-                        // reset buffer write pos
                         codesEnd = numCodes * 2;
-
-                        // clear previous code
                         previousCode = NoCode;
                         mask = (uint)(nextSize - 1);
-
                         continue;
                     }
                     else if (curCode == endCode)
-                        // stop
                         break;
 
                     var plusOne = false;
                     var codePos = 0;
 
                     if (curCode < numCodes)
-                        // write existing code
                         codePos = Indices[curCode];
                     else if (previousCode != NoCode)
                     {
-                        // write previous code
                         codePos = Indices[previousCode];
                         plusOne = true;
                     }
                     else
                         continue;
-
-
-                    // output colours
 
                     var codeLength = Codes[codePos++];
                     var newCode = Codes[codePos];
@@ -462,7 +473,6 @@ namespace Core
                             if (row < 0)
                             {
                                 SkipBlocks();
-
                                 return;
                             }
                         }
@@ -483,38 +493,23 @@ namespace Core
                         }
                     }
 
-                    // create new code
-
                     if (previousCode != NoCode && numCodes != Indices.Length)
                     {
-                        // get previous code from buffer
-
                         codePos = Indices[previousCode];
                         codeLength = Codes[codePos++];
-
-                        // resize buffer if required (should be rare)
 
                         if (codesEnd + codeLength + 1 >= Codes.Length)
                             Array.Resize(ref Codes, Codes.Length * 2);
 
-                        // add new code
-
                         Indices[numCodes++] = codesEnd;
                         Codes[codesEnd++] = (ushort)(codeLength + 1);
 
-                        // copy previous code sequence
-
                         var stop = codesEnd + codeLength;
-
                         while (codesEnd < stop)
                             Codes[codesEnd++] = Codes[codePos++];
 
-                        // append new code
-
                         Codes[codesEnd++] = newCode;
                     }
-
-                    // increase code size?
 
                     if (numCodes >= nextSize && codeSize < 12)
                     {
@@ -522,114 +517,91 @@ namespace Core
                         mask = (uint)(nextSize - 1);
                     }
 
-                    // remember last code processed
                     previousCode = curCode;
                 }
 
-                // skip any remaining blocks
                 SkipBlocks();
             }
-            void Deinterlace(ref Frame image, Allocator allocator)
+            void Deinterlace(ref Frame image)
             {
-                var numRows = image.RawImage.Length / Width;
-                var writePos = image.RawImage.Length - Width; // NB: work backwards due to Y-coord flip
                 var input = image.RawImage;
+                var output = new NativeArray<Color32>(input.Length, Allocator.Temp);
 
-                image.RawImage = new NativeArray<Color32>(image.RawImage.Length, allocator);
+                NativeArray<Color32>.Copy(input, output, input.Length);
 
-                for (var row = 0; row < numRows; row++)
+                int topRow = Height - ImageTop - 1;
+                int srcIndex = 0;
+
+                for (int pass = 0; pass < 4; pass++)
                 {
-                    var copyRow = 0;
-
-                    // every 8th row starting at 0
-                    if (row % 8 == 0)
-                        copyRow = row / 8;
-                    // every 8th row starting at 4
-                    else if ((row + 4) % 8 == 0)
+                    int start, step;
+                    switch (pass)
                     {
-                        var o = numRows / 8;
-                        copyRow = o + (row - 4) / 8;
-                    }
-                    // every 4th row starting at 2
-                    else if ((row + 2) % 4 == 0)
-                    {
-                        var o = numRows / 4;
-                        copyRow = o + (row - 2) / 4;
-                    }
-                    // every 2nd row starting at 1
-                    else // if( ( r + 1 ) % 2 == 0 )
-                    {
-                        var o = numRows / 2;
-                        copyRow = o + (row - 1) / 2;
+                        case 0:
+                        start = 0;
+                        step = 8;
+                        break;
+                        case 1:
+                        start = 4;
+                        step = 8;
+                        break;
+                        case 2:
+                        start = 2;
+                        step = 4;
+                        break;
+                        default:
+                        start = 1;
+                        step = 2;
+                        break;
                     }
 
-                    for (int w = 0; w < Width; w++)
-                        image.RawImage[writePos + w] = input[(numRows - copyRow - 1) * Width + w];
+                    for (int gifRow = start; gifRow < ImageHeight; gifRow += step)
+                    {
+                        var srcRow = topRow - srcIndex;
+                        var dstRow = topRow - gifRow;
 
-                    writePos -= Width;
+                        if (srcRow != dstRow)
+                        {
+                            var srcBase = srcRow * Width + ImageLeft;
+                            var dstBase = dstRow * Width + ImageLeft;
+                            for (int x = 0; x < ImageWidth; x++)
+                                output[dstBase + x] = input[srcBase + x];
+                        }
+
+                        srcIndex++;
+                    }
                 }
 
-                if (allocator != Allocator.Temp)
-                    input.Dispose();
+                NativeArray<Color32>.Copy(output, input, input.Length);
+                output.Dispose();
             }
-
             byte ReadByte() => Input[D++];
             ushort ReadUInt16() => (ushort)(Input[D++] | Input[D++] << 8);
-
             Color32[] ReadColourTable(Color32[] colourTable, ImageFlag flags)
             {
                 var tableSize = Pow2[(int)(flags & ImageFlag.TableSizeMask) + 1];
                 for (var i = 0; i < tableSize; i++)
-                    colourTable[i] = new Color32(
-                        Input[D++],
-                        Input[D++],
-                        Input[D++],
-                        0xFF
-                    );
-
+                    colourTable[i] = new Color32(Input[D++], Input[D++], Input[D++], 0xFF);
                 return colourTable;
             }
 
             #region DISPOSABLE
             public void Dispose() => Dispose(true);
-            protected virtual void Dispose(bool disposing) { }
+            protected virtual void Dispose(bool disposing)
+            {
+                if (Canvas.IsCreated)
+                    Canvas.Dispose();
+                if (Snapshot.IsCreated)
+                    Snapshot.Dispose();
+            }
             #endregion
 
             #region GIF FORMAT
-            [Flags]
-            enum ImageFlag
-            {
-                Interlaced = 0x40,
-                ColourTable = 0x80,
-                TableSizeMask = 0x07,
-                BitDepthMask = 0x70,
-            }
-            enum Block
-            {
-                Image = 0x2C,
-                Extension = 0x21,
-                End = 0x3B
-            }
-            enum Extension
-            {
-                GraphicControl = 0xF9,
-                Comments = 0xFE,
-                PlainText = 0x01,
-                ApplicationData = 0xFF
-            }
-            enum Disposal
-            {
-                None = 0x00,
-                DoNotDispose = 0x04,
-                RestoreBackground = 0x08,
-                ReturnToPrevious = 0x0C
-            }
-            [Flags]
-            enum ControlFlags
-            {
-                HasTransparency = 0x01,
-                DisposalMask = 0x0C
-            }
+            [Flags] enum ImageFlag { Interlaced = 0x40, ColourTable = 0x80, TableSizeMask = 0x07, BitDepthMask = 0x70 }
+            enum Block { Image = 0x2C, Extension = 0x21, End = 0x3B }
+            enum Extension { GraphicControl = 0xF9, Comments = 0xFE, PlainText = 0x01, ApplicationData = 0xFF }
+            enum Disposal { None = 0x00, DoNotDispose = 0x04, RestoreBackground = 0x08, ReturnToPrevious = 0x0C }
+            [Flags] enum ControlFlags { HasTransparency = 0x01, DisposalMask = 0x0C }
             #endregion
         }
         #endregion
@@ -649,6 +621,11 @@ namespace Core
             Height = height;
 
             RawImage = new NativeArray<Color32>(width * height, allocator);
+        }
+        ~Frame()
+        {
+            if (RawImage.IsCreated)
+                RawImage.Dispose();
         }
     }
 }

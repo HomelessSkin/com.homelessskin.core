@@ -54,6 +54,8 @@ namespace Core
 
                 frame.RawImage.Dispose();
             }
+
+            SaveActions();
         }
         public static void UpdateAnimations(float delta)
         {
@@ -150,6 +152,9 @@ namespace Core
                 }
             }
 
+            if (Animations.ContainsKey(earlier))
+                Animations.Remove(earlier);
+
             return earlier;
         }
         static void Draw(Frame frame, int id)
@@ -159,7 +164,6 @@ namespace Core
 
             Data.Texture.SetPixels32(x, y, Data.WidthSprites, Data.HeightSprites, frame.RawImage.ToArray());
         }
-
         static void SaveActions()
         {
             Data.Texture.Apply();
