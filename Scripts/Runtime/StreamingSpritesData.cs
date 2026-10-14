@@ -17,6 +17,7 @@ namespace Core
 
         public int SpriteDensity;
         public Texture2D Texture;
+        public Material Smiles;
 
         [Space]
         public Texture2D[] DefaultSprites;
@@ -102,14 +103,6 @@ namespace Core
 
             return n;
         }
-        public static int GetCount()
-        {
-            for (int t = Data.DefaultSprites.Length; t < TextureMap.Length; t++)
-                if (TextureMap[t] <= 0.0001f)
-                    return t;
-
-            return TextureMap.Length;
-        }
 
         //public static void RemoveRange(List<int> toRemove)
         //{
@@ -142,6 +135,8 @@ namespace Core
                 {
                     TextureMap[t] = Time.realtimeSinceStartup;
 
+                    Data.Smiles.SetInt("_Max_Smiles", t);
+
                     return t;
                 }
 
@@ -154,6 +149,8 @@ namespace Core
 
             if (Animations.ContainsKey(earlier))
                 Animations.Remove(earlier);
+
+            Data.Smiles.SetInt("_Max_Smiles", earlier);
 
             return earlier;
         }

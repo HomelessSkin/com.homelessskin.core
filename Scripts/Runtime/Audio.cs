@@ -7,13 +7,13 @@ namespace Core
 {
     public static class Audio
     {
-        public static async void LoadAndPlay(Clip clip)
+        public static async void LoadAndPlay(Clip clip, float globalVolume = 1f)
         {
             using (var request = UnityWebRequestMultimedia.GetAudioClip(clip.Path, AudioType.MPEG))
             {
                 await request.SendWebRequest();
                 if (request.result == UnityWebRequest.Result.Success)
-                    PlayAudioAndDestroy.Play(DownloadHandlerAudioClip.GetContent(request), clip.Volume);
+                    PlayAudioAndDestroy.Play(DownloadHandlerAudioClip.GetContent(request), clip.Volume * globalVolume);
                 else
                     Log.Error(request, $"Sound Alert:\n{clip.Path}\nwas not loaded:\n{request.error}");
             }
