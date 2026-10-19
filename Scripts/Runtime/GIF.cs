@@ -615,17 +615,33 @@ namespace Core
 
         public NativeArray<Color32> RawImage;
 
-        public Frame(int width, int height, Allocator allocator)
+        public Frame(int width, int height, Allocator allocator = Allocator.Temp)
         {
             Width = width;
             Height = height;
 
             RawImage = new NativeArray<Color32>(width * height, allocator);
         }
+        public Frame(Texture2D sprite, Allocator allocator = Allocator.Temp)
+        {
+            SetData(sprite, allocator);
+        }
+
         ~Frame()
         {
             if (RawImage.IsCreated)
                 RawImage.Dispose();
+        }
+
+        public void SetData(Texture2D sprite, Allocator allocator = Allocator.Temp)
+        {
+            Width = sprite.width;
+            Height = sprite.height;
+
+            if (RawImage.IsCreated)
+                RawImage.Dispose();
+
+            RawImage = new NativeArray<Color32>(sprite.GetPixels32(), allocator);
         }
     }
 }

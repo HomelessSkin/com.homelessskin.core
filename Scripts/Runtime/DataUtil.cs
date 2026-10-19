@@ -463,6 +463,9 @@ namespace Core
                     pixels[y * newWidth + x] = Color.Lerp(top, bottom, yLerp);
                 }
 
+            frame.Width = newWidth;
+            frame.Height = newHeight;
+
             frame.RawImage.Dispose();
             frame.RawImage = pixels;
         }

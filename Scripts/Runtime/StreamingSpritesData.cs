@@ -48,12 +48,10 @@ namespace Core
 
             for (int d = 0; d < Data.DefaultSprites.Length; d++)
             {
-                var sprite = Data.DefaultSprites[d];
-                var frame = new Frame(sprite.width, sprite.height, Allocator.Persistent);
+                var frame = new Frame(Data.DefaultSprites[d]);
+                DataUtil.ResizeBilinear(ref frame, Data.WidthSprites, Data.HeightSprites);
 
                 Draw(frame, d);
-
-                frame.RawImage.Dispose();
             }
 
             SaveActions();
