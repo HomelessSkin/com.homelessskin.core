@@ -1173,6 +1173,8 @@ namespace Core
     public abstract class KeyScriptable : ScriptableObject
     {
         public int ID;
+
+        public bool Equals(KeyScriptable other) => GetType() == other.GetType() && ID == other.ID;
         public int GetID() => ID;
         public static FixedList128Bytes<int> GetIDs<T>(T[] scriptables) where T : KeyScriptable
         {
