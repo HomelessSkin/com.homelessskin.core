@@ -1188,13 +1188,15 @@ namespace Core
         }
 
 #if UNITY_EDITOR
-        protected virtual void Reset() => RandomizeID();
+        protected virtual void Reset() => RandomizeID(true);
 
-        public virtual void RandomizeID()
+        public virtual void RandomizeID() => RandomizeID(false);
+        public virtual void RandomizeID(bool fromEditor)
         {
             ID = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
-            Save();
+            if (!fromEditor)
+                Save();
         }
 
         protected void Save()
